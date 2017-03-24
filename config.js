@@ -81,3 +81,11 @@ export const config = {
   }
 };
 /* tslint:enable */
+
+[
+  {'className':'_general_recovery', 'size':['1', '1'],'offset':['0', '0'],'margin':'0', 'safeZone':'0'},
+  {'className':'_general_commercial', 'size':['40', '42'],'offset':['20', '37'],'margin':'200', 'safeZone':0},
+  {'className':'_general_mushroom', 'size':['22', '30'],'offset':['11', '27'],'margin':'170', 'safeZone':'35'},
+  {'className':'_general_bullet', 'size':['10', '10'],'offset':['5', '5'],'margin':0,'safeZone':15},
+  {'className':'_general_hidden', 'size':['0', '0'],'offset':['0', '0'],'margin':'0', 'safeZone':'0'}
+]

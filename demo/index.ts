@@ -1,49 +1,152 @@
+import * as DG from '2gis-maps';
 import {
     MarkerDrawer,
     Atlas,
-    Marker,
+    Marker as DrawMarker,
 } from 'markerdrawer';
-// import { config } from './config';
+import {
+    generalize,
+    Marker as GeneralizeMarker,
+    PriorityGroup,
+} from '../src';
 
-const map = L.map('map', {
-    center: [54.980156831455, 82.897440725094],
-    zoom: 15,
-});
+interface ApiMarker {
+    lon: number;
+    lat: number;
+    is_advertising: boolean;
+}
 
-L.tileLayer('http://{s}.tile.osm.org/{z}/{x}/{y}.png', {
-    attribution: '&copy; <a href="http://osm.org/copyright">OpenStreetMap</a> contributors',
-}).addTo(map);
+function loadMarkersData(): Promise<ApiMarker[]> {
+    return fetch('./demo/search.json')
+        .then((res) => res.json())
+        .then((data: any) => data.result.items as ApiMarker[]);
+}
 
-const centerLngLat = [82.897440725094, 54.980156831455];
-const markersData: Marker[] = [];
-for (let i = 0; i < 5000; i++) {
-    markersData.push({
-        position: [
-            centerLngLat[0] + (Math.random() - 0.5) * 0.25,
-            centerLngLat[1] + (Math.random() - 0.5) * 0.1,
-        ],
+function loadMapsApi(): Promise<L.Map> {
+    return new Promise((res) => {
+        DG.then(() => {
+            const map = L.map('map', {
+                center: [55.75088330688495, 37.62062072753907],
+                zoom: 11,
+            });
+
+            res(map);
+        });
     });
 }
 
-const pinAd = new Image();
-pinAd.src = 'demo/marker-ad.svg';
+function loadAtlas(): Promise<Atlas> {
+    const m0 = new Image();
+    m0.src = 'demo/markers/pin_commercial.png';
 
-const pin = new Image();
-pin.src = 'demo/marker-regular.svg';
+    const m1 = new Image();
+    m1.src = 'demo/markers/pin_regular.png';
 
-const atlas = new Atlas([{
-    image: pinAd,
-    anchor: [0.5, 0.5],
-}, {
-    image: pin,
-    anchor: [0.5, 0.5],
-}]);
+    const m2 = new Image();
+    m2.src = 'demo/markers/pin_tile.png';
 
-const markerDrawer = new MarkerDrawer(markersData, atlas);
+    const atlas = new Atlas([{
+        image: m0,
+        anchor: [0.5, 0.5],
+    }, {
+        image: m1,
+        anchor: [0.5, 0.5],
+    }, {
+        image: m2,
+        anchor: [0.5, 0.5],
+    }]);
 
-markerDrawer.on('click', (ev) => {
+    return atlas.whenReady().then(() => atlas);
+}
+
+Promise.all([
+    loadMapsApi(),
+    loadAtlas(),
+    loadMarkersData(),
+]).then(([map, atlas, markersData]) => {
+    // const markersData: any[] = [
+    //     { lon: 37.916923522949, lat: 55.830142974854, is_advertising: true },
+    //     { lon: 37.983196258545, lat: 55.858730316162, is_advertising: false },
+    //     { lon: 37.943126678467, lat: 55.796855926514, is_advertising: true },
+    // ];
+    const markers: DrawMarker[] = [];
+
+    for (let i = 0; i < markersData.length; i++) {
+        const markerData = markersData[i];
+
+        markers.push({
+            position: [
+                markerData.lon,
+                markerData.lat,
+            ],
+        });
+    }
+
+    const priorityGroups: PriorityGroup[] = [{
+        iconIndex: 0,
+        safeZone: 0,
+        margin: 0,
+    }, {
+        iconIndex: 1,
+        safeZone: 100,
+        margin: 50,
+    }, {
+        iconIndex: 2,
+        safeZone: 0,
+        margin: 0,
+    }];
+
+    atlas.whenReady().then(() => {
+        const markersWithGroups: GeneralizeMarker[] = markers.map((marker: GeneralizeMarker, i) => {
+            marker.groupIndex = markersData[i].is_advertising ? 0 : 1;
+            return marker;
+        });
+
+        let markerDrawer;
+        let showedMarkers: GeneralizeMarker[];
+
+        function updateGeneralization() {
+            console.time('gen');
+            const generalizeMarkers: GeneralizeMarker[] = markersWithGroups.map((marker: GeneralizeMarker) => {
+                const point = map.project(L.latLng(marker.position[1], marker.position[0]), map.getZoom());
+                marker.pixelPosition = [point.x, point.y];
+                return marker;
+            });
+
+            showedMarkers = generalize(priorityGroups, atlas, generalizeMarkers);
+            showedMarkers.map((marker: GeneralizeMarker) => {
+                if (marker.iconIndex === undefined) {
+                    return;
+                }
+                const group = priorityGroups[marker.iconIndex];
+                marker.drawingOffsets = [
+                    0,
+                    group.safeZone,
+                    group.margin,
+                ];
+
+            });
+
+            if (markerDrawer) {
+                markerDrawer.remove();
+            }
+
+            markerDrawer = new MarkerDrawer(showedMarkers, atlas, {
+                debugDrawing: true,
+            });
+            markerDrawer.on('click', (ev) => {
+                const marker = showedMarkers[ev.markers[0]];
+                // tslint:disable-next-line
+                console.log('click', `{ lon: ${marker.position[0]}, lat: ${marker.position[1]} }`, marker);
+            });
+            markerDrawer.addTo(map);
+            console.timeEnd('gen');
+        }
+
+        map.on('zoomend', updateGeneralization);
+        updateGeneralization();
+    });
+}).catch((error) => {
     // tslint:disable-next-line
-    console.log('click', ev);
+    console.log(error.stack);
 });
-
-markerDrawer.addTo(map);

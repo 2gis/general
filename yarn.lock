@@ -2,6 +2,15 @@
 # yarn lockfile v1
 
 
+"2gis-maps@^3.2.0":
+  version "3.2.0"
+  resolved "https://registry.yarnpkg.com/2gis-maps/-/2gis-maps-3.2.0.tgz#71f00ea97d612f67fc224dc1ac5150d8df6e367c"
+  dependencies:
+    dustjs-helpers "1.7.3"
+    dustjs-linkedin "2.7.2"
+    html5shiv "^3.7.3"
+    leaflet "git://github.com/Leaflet/Leaflet.git#v1.0.1"
+
 "@types/geojson@*":
   version "1.0.0"
   resolved "https://registry.yarnpkg.com/@types/geojson/-/geojson-1.0.0.tgz#6af48a0d492c09068e97cb78e6bef940d57fb36d"
@@ -74,7 +83,7 @@ ansi-styles@^2.2.1:
   version "2.2.1"
   resolved "https://registry.yarnpkg.com/ansi-styles/-/ansi-styles-2.2.1.tgz#b432dd3358b634cf75e1e4664368240533c1ddbe"
 
-anymatch@^1.3.0:
+anymatch@^1.1.0, anymatch@^1.3.0:
   version "1.3.0"
   resolved "https://registry.yarnpkg.com/anymatch/-/anymatch-1.3.0.tgz#a3e52fa39168c825ff57b0248126ce5a8ff95507"
   dependencies:
@@ -139,6 +148,10 @@ assert@^1.1.1:
   resolved "https://registry.yarnpkg.com/assert/-/assert-1.4.1.tgz#99912d591836b5a6f5b345c0f07eefc08fc65d91"
   dependencies:
     util "0.10.3"
+
+async-each@^0.1.5:
+  version "0.1.6"
+  resolved "https://registry.yarnpkg.com/async-each/-/async-each-0.1.6.tgz#b67e99edcddf96541e44af56290cd7d5c6e70439"
 
 async-each@^1.0.0:
   version "1.0.1"
@@ -378,6 +391,21 @@ chokidar@^1.4.3, chokidar@^1.6.0:
   optionalDependencies:
     fsevents "^1.0.0"
 
+chokidar@~1.0.1:
+  version "1.0.6"
+  resolved "https://registry.yarnpkg.com/chokidar/-/chokidar-1.0.6.tgz#0a1c0bce1e24993afc105a5b81ea26dda01e23af"
+  dependencies:
+    anymatch "^1.1.0"
+    arrify "^1.0.0"
+    async-each "^0.1.5"
+    glob-parent "^1.0.0"
+    is-binary-path "^1.0.0"
+    is-glob "^1.1.3"
+    path-is-absolute "^1.0.0"
+    readdirp "^1.3.0"
+  optionalDependencies:
+    fsevents "^0.3.8"
+
 cipher-base@^1.0.0, cipher-base@^1.0.1:
   version "1.0.3"
   resolved "https://registry.yarnpkg.com/cipher-base/-/cipher-base-1.0.3.tgz#eeabf194419ce900da3018c207d212f2a6df0a07"
@@ -387,6 +415,13 @@ cipher-base@^1.0.0, cipher-base@^1.0.1:
 cli-boxes@^1.0.0:
   version "1.0.0"
   resolved "https://registry.yarnpkg.com/cli-boxes/-/cli-boxes-1.0.0.tgz#4fa917c3e59c94a004cd61f8ee509da651687143"
+
+cli@~0.6.6:
+  version "0.6.6"
+  resolved "https://registry.yarnpkg.com/cli/-/cli-0.6.6.tgz#02ad44a380abf27adac5e6f0cdd7b043d74c53e3"
+  dependencies:
+    exit "0.1.2"
+    glob "~ 3.2.1"
 
 cliui@^2.1.0:
   version "2.1.0"
@@ -645,6 +680,17 @@ duplexer3@^0.1.4:
   version "0.1.4"
   resolved "https://registry.yarnpkg.com/duplexer3/-/duplexer3-0.1.4.tgz#ee01dd1cac0ed3cbc7fdbea37dc0a8f1ce002ce2"
 
+dustjs-helpers@1.7.3:
+  version "1.7.3"
+  resolved "https://registry.yarnpkg.com/dustjs-helpers/-/dustjs-helpers-1.7.3.tgz#0251349a773230e0dd67dc2ce85f528a0fb95dad"
+
+dustjs-linkedin@2.7.2:
+  version "2.7.2"
+  resolved "https://registry.yarnpkg.com/dustjs-linkedin/-/dustjs-linkedin-2.7.2.tgz#d3069d3d9d267262b5ed4c789a9f687e3d725832"
+  dependencies:
+    chokidar "~1.0.1"
+    cli "~0.6.6"
+
 ecc-jsbn@~0.1.1:
   version "0.1.1"
   resolved "https://registry.yarnpkg.com/ecc-jsbn/-/ecc-jsbn-0.1.1.tgz#0fc73a9ed5f0d53c38193398523ef7e543777505"
@@ -746,6 +792,10 @@ execa@^0.4.0:
     object-assign "^4.0.1"
     path-key "^1.0.0"
     strip-eof "^1.0.0"
+
+exit@0.1.2:
+  version "0.1.2"
+  resolved "https://registry.yarnpkg.com/exit/-/exit-0.1.2.tgz#0632638f8d877cc82107d30a0fff1a17cba1cd0c"
 
 expand-brackets@^0.1.4:
   version "0.1.5"
@@ -891,6 +941,12 @@ fs.realpath@^1.0.0:
   version "1.0.0"
   resolved "https://registry.yarnpkg.com/fs.realpath/-/fs.realpath-1.0.0.tgz#1504ad2523158caa40db4a2787cb01411994ea4f"
 
+fsevents@^0.3.8:
+  version "0.3.8"
+  resolved "https://registry.yarnpkg.com/fsevents/-/fsevents-0.3.8.tgz#9992f1032c925c829554d0d59801dca0313a5356"
+  dependencies:
+    nan "^2.0.2"
+
 fsevents@^1.0.0:
   version "1.1.1"
   resolved "https://registry.yarnpkg.com/fsevents/-/fsevents-1.1.1.tgz#f19fd28f43eeaf761680e519a203c4d0b3d31aff"
@@ -949,6 +1005,12 @@ glob-base@^0.3.0:
     glob-parent "^2.0.0"
     is-glob "^2.0.0"
 
+glob-parent@^1.0.0:
+  version "1.3.0"
+  resolved "https://registry.yarnpkg.com/glob-parent/-/glob-parent-1.3.0.tgz#971edd816ed5db58705b58079647a64d0aef7968"
+  dependencies:
+    is-glob "^2.0.0"
+
 glob-parent@^2.0.0:
   version "2.0.0"
   resolved "https://registry.yarnpkg.com/glob-parent/-/glob-parent-2.0.0.tgz#81383d72db054fcccf5336daa902f182f6edbb28"
@@ -965,6 +1027,13 @@ glob@^7.0.5, glob@^7.1.1:
     minimatch "^3.0.2"
     once "^1.3.0"
     path-is-absolute "^1.0.0"
+
+"glob@~ 3.2.1":
+  version "3.2.11"
+  resolved "https://registry.yarnpkg.com/glob/-/glob-3.2.11.tgz#4a973f635b9190f715d10987d5c00fd2815ebe3d"
+  dependencies:
+    inherits "2"
+    minimatch "0.3"
 
 glob@~5.0.0:
   version "5.0.15"
@@ -992,7 +1061,7 @@ got@^6.7.1:
     unzip-response "^2.0.1"
     url-parse-lax "^1.0.0"
 
-graceful-fs@^4.1.11, graceful-fs@^4.1.2:
+graceful-fs@^4.1.11, graceful-fs@^4.1.2, graceful-fs@~4.1.2:
   version "4.1.11"
   resolved "https://registry.yarnpkg.com/graceful-fs/-/graceful-fs-4.1.11.tgz#0e8bdfe4d1ddb8854d64e04ea7c00e2a026e5658"
 
@@ -1068,6 +1137,10 @@ hpack.js@^2.1.6:
 html-entities@^1.2.0:
   version "1.2.0"
   resolved "https://registry.yarnpkg.com/html-entities/-/html-entities-1.2.0.tgz#41948caf85ce82fed36e4e6a0ed371a6664379e2"
+
+html5shiv@^3.7.3:
+  version "3.7.3"
+  resolved "https://registry.yarnpkg.com/html5shiv/-/html5shiv-3.7.3.tgz#d78a84a367bcb9a710100d57802c387b084631d2"
 
 http-deceiver@^1.2.4:
   version "1.2.7"
@@ -1212,6 +1285,10 @@ is-fullwidth-code-point@^1.0.0:
 is-fullwidth-code-point@^2.0.0:
   version "2.0.0"
   resolved "https://registry.yarnpkg.com/is-fullwidth-code-point/-/is-fullwidth-code-point-2.0.0.tgz#a3b30a5c4f199183167aaab93beefae3ddfb654f"
+
+is-glob@^1.1.3:
+  version "1.1.3"
+  resolved "https://registry.yarnpkg.com/is-glob/-/is-glob-1.1.3.tgz#b4c64b8303d39114492a460d364ccfb0d3c0a045"
 
 is-glob@^2.0.0, is-glob@^2.0.1:
   version "2.0.1"
@@ -1368,6 +1445,10 @@ lcid@^1.0.0:
   dependencies:
     invert-kv "^1.0.0"
 
+"leaflet@git://github.com/Leaflet/Leaflet.git#v1.0.1":
+  version "1.0.1"
+  resolved "git://github.com/Leaflet/Leaflet.git#ffcfcc1ba9a5b43ceff729ad87353fb768cfb7c4"
+
 load-json-file@^1.0.0:
   version "1.1.0"
   resolved "https://registry.yarnpkg.com/load-json-file/-/load-json-file-1.1.0.tgz#956905708d58b4bab4c2261b04f59f31c99374c0"
@@ -1410,6 +1491,10 @@ longest@^1.0.1:
 lowercase-keys@^1.0.0:
   version "1.0.0"
   resolved "https://registry.yarnpkg.com/lowercase-keys/-/lowercase-keys-1.0.0.tgz#4e3366b39e7f5457e35f1324bdf6f88d0bfc7306"
+
+lru-cache@2:
+  version "2.7.3"
+  resolved "https://registry.yarnpkg.com/lru-cache/-/lru-cache-2.7.3.tgz#6d4524e8b955f95d4f5b58851ce21dd72fb4e952"
 
 lru-cache@^4.0.0:
   version "4.0.2"
@@ -1488,11 +1573,25 @@ minimalistic-crypto-utils@^1.0.0, minimalistic-crypto-utils@^1.0.1:
   version "1.0.1"
   resolved "https://registry.yarnpkg.com/minimalistic-crypto-utils/-/minimalistic-crypto-utils-1.0.1.tgz#f6c00c1c0b082246e5c4d99dfb8c7c083b2b582a"
 
+minimatch@0.3:
+  version "0.3.0"
+  resolved "https://registry.yarnpkg.com/minimatch/-/minimatch-0.3.0.tgz#275d8edaac4f1bb3326472089e7949c8394699dd"
+  dependencies:
+    lru-cache "2"
+    sigmund "~1.0.0"
+
 "minimatch@2 || 3", minimatch@^3.0.0, minimatch@^3.0.2:
   version "3.0.3"
   resolved "https://registry.yarnpkg.com/minimatch/-/minimatch-3.0.3.tgz#2a4e4090b96b2db06a9d7df01055a62a77c9b774"
   dependencies:
     brace-expansion "^1.0.0"
+
+minimatch@~0.2.12:
+  version "0.2.14"
+  resolved "https://registry.yarnpkg.com/minimatch/-/minimatch-0.2.14.tgz#c74e780574f63c6f9a090e90efbe6ef53a6a756a"
+  dependencies:
+    lru-cache "2"
+    sigmund "~1.0.0"
 
 minimist@0.0.8, minimist@~0.0.1:
   version "0.0.8"
@@ -1516,7 +1615,7 @@ ms@0.7.2:
   version "0.7.2"
   resolved "https://registry.yarnpkg.com/ms/-/ms-0.7.2.tgz#ae25cf2512b3885a1d95d7f037868d8431124765"
 
-nan@^2.3.0:
+nan@^2.0.2, nan@^2.3.0:
   version "2.5.1"
   resolved "https://registry.yarnpkg.com/nan/-/nan-2.5.1.tgz#d5b01691253326a97a2bbee9e61c55d8d60351e2"
 
@@ -1919,6 +2018,23 @@ read-pkg@^1.0.0:
     string_decoder "~0.10.x"
     util-deprecate "~1.0.1"
 
+readable-stream@~1.0.26-2:
+  version "1.0.34"
+  resolved "https://registry.yarnpkg.com/readable-stream/-/readable-stream-1.0.34.tgz#125820e34bc842d2f2aaafafe4c2916ee32c157c"
+  dependencies:
+    core-util-is "~1.0.0"
+    inherits "~2.0.1"
+    isarray "0.0.1"
+    string_decoder "~0.10.x"
+
+readdirp@^1.3.0:
+  version "1.4.0"
+  resolved "https://registry.yarnpkg.com/readdirp/-/readdirp-1.4.0.tgz#c5de6fcb3dec80523c1c70113f1a190d8af82c89"
+  dependencies:
+    graceful-fs "~4.1.2"
+    minimatch "~0.2.12"
+    readable-stream "~1.0.26-2"
+
 readdirp@^2.0.0:
   version "2.1.0"
   resolved "https://registry.yarnpkg.com/readdirp/-/readdirp-2.1.0.tgz#4ed0ad060df3073300c48440373f72d1cc642d78"
@@ -2098,6 +2214,10 @@ sha.js@^2.3.6:
   resolved "https://registry.yarnpkg.com/sha.js/-/sha.js-2.4.8.tgz#37068c2c476b6baf402d14a49c67f597921f634f"
   dependencies:
     inherits "^2.0.1"
+
+sigmund@~1.0.0:
+  version "1.0.1"
+  resolved "https://registry.yarnpkg.com/sigmund/-/sigmund-1.0.1.tgz#3ff21f198cad2175f9f3b781853fd94d0d19b590"
 
 signal-exit@^3.0.0:
   version "3.0.2"

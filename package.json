@@ -11,6 +11,7 @@
   },
   "dependencies": {},
   "devDependencies": {
+    "2gis-maps": "^3.2.0",
     "@types/leaflet": "^1.0.56",
     "@types/rbush": "^2.0.2",
     "markerdrawer": "https://github.com/Trufi/MarkerDrawer.git#cda2d9a6810db4488669663b0325a9932c3146be",
