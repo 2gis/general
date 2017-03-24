@@ -1,0 +1,25 @@
+{
+    "compilerOptions": {
+        "baseUrl": ".",
+        "paths": {
+        "tslib": ["./node_modules/tslib/tslib.d.ts"],
+        "*": [
+            "src/*",
+            "demo/*"
+        ]
+        },
+        "target": "es5",
+        "lib": ["dom", "es6"],
+        "sourceMap": true,
+        "noImplicitAny": false,
+        "strictNullChecks": true,
+        "noEmitHelpers": true,
+        "importHelpers": true,
+        "noUnusedLocals": true,
+        "noUnusedParameters": true
+    },
+    "exclude": [
+        "node_modules"
+    ],
+    "compileOnSave": false
+}

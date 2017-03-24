@@ -1,0 +1,26 @@
+{
+  "name": "generalization",
+  "version": "0.0.1",
+  "description": "",
+  "author": "Mstislav Zhivodkov",
+  "license": "MIT",
+  "main": "index.js",
+  "scripts": {
+    "start": "webpack-dev-server",
+    "build": "webpack"
+  },
+  "dependencies": {},
+  "devDependencies": {
+    "@types/leaflet": "^1.0.56",
+    "@types/rbush": "^2.0.2",
+    "markerdrawer": "https://github.com/Trufi/MarkerDrawer.git#cda2d9a6810db4488669663b0325a9932c3146be",
+    "rbush": "^2.0.1",
+    "ts-loader": "^2.0.3",
+    "tslib": "^1.6.0",
+    "tslint": "^4.5.1",
+    "tslint-eslint-rules": "^3.5.1",
+    "typescript": "^2.2.1",
+    "webpack": "^2.3.1",
+    "webpack-dev-server": "^2.4.2"
+  }
+}

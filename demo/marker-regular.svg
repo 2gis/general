@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="26" height="26" viewBox="0 0 27 27">
+  <filter filterUnits="objectBoundingBox" height="200%" id="a" width="200%" x="-50%" y="-50%">
+    <feOffset dy="2" in="SourceAlpha" result="shadowOffsetOuter1"/>
+    <feGaussianBlur in="shadowOffsetOuter1" result="shadowBlurOuter1" stdDeviation="1"/>
+    <feColorMatrix in="shadowBlurOuter1" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0.2 0"/>
+  </filter>
+  <circle cx="13.5" cy="11.5" r="11.5" filter="url(#a)"/>
+  <linearGradient id="b" gradientUnits="userSpaceOnUse" x1="-225.239" y1="252.332" x2="-225.239" y2="253.653" gradientTransform="matrix(23 0 0 -23 5194 5836)">
+    <stop offset="0" stop-color="#005583"/>
+    <stop offset="1" stop-color="#41A5DB"/>
+  </linearGradient>
+  <path fill="url(#b)" d="M13.5 23c6.4 0 11.5-5.1 11.5-11.5s-5.1-11.5-11.5-11.5-11.5 5.1-11.5 11.5 5.1 11.5 11.5 11.5z"/>
+</svg>
