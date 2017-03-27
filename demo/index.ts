@@ -99,6 +99,10 @@ Promise.all([
         margin: 0,
     }];
 
+    const config = {
+        drawingOffsets: false,
+    };
+
     atlas.whenReady().then(() => {
         const markersWithGroups: GeneralizeMarker[] = markers.map((marker: GeneralizeMarker, i) => {
             marker.groupIndex = markersData[i].is_advertising ? 0 : 1;
@@ -108,7 +112,7 @@ Promise.all([
         let markerDrawer;
         let showedMarkers: GeneralizeMarker[];
 
-        initGui(priorityGroups, updateGeneralization);
+        initGui(config, priorityGroups, updateGeneralization);
 
         function updateGeneralization() {
             console.time('gen');
@@ -124,6 +128,7 @@ Promise.all([
                     return;
                 }
                 const group = priorityGroups[marker.iconIndex];
+
                 marker.drawingOffsets = [
                     0,
                     group.safeZone,
@@ -137,7 +142,7 @@ Promise.all([
             }
 
             markerDrawer = new MarkerDrawer(showedMarkers, atlas, {
-                debugDrawing: true,
+                debugDrawing: config.drawingOffsets,
             });
             markerDrawer.on('click', (ev) => {
                 const marker = showedMarkers[ev.markers[0]];
@@ -156,7 +161,11 @@ Promise.all([
     console.log(error.stack);
 });
 
-function initGui(priorityGroups: PriorityGroup[], updateGeneralization: () => void) {
+function initGui(
+    config: { drawingOffsets: boolean },
+    priorityGroups: PriorityGroup[],
+    updateGeneralization: () => void,
+) {
     priorityGroups.forEach((group, i) => {
         const folder = gui.addFolder(`Group ${i}`);
         const safeZone = folder.add(group, 'safeZone', 0, 200);
@@ -165,4 +174,6 @@ function initGui(priorityGroups: PriorityGroup[], updateGeneralization: () => vo
         margin.onChange(updateGeneralization);
         folder.open();
     });
+    const drawingOffsets = gui.add(config, 'drawingOffsets');
+    drawingOffsets.onChange(updateGeneralization);
 }
