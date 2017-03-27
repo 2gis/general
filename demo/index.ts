@@ -10,6 +10,9 @@ import {
     PriorityGroup,
 } from '../src';
 
+declare var dat: any;
+const gui = new dat.GUI();
+
 interface ApiMarker {
     lon: number;
     lat: number;
@@ -105,6 +108,8 @@ Promise.all([
         let markerDrawer;
         let showedMarkers: GeneralizeMarker[];
 
+        initGui(priorityGroups, updateGeneralization);
+
         function updateGeneralization() {
             console.time('gen');
             const generalizeMarkers: GeneralizeMarker[] = markersWithGroups.map((marker: GeneralizeMarker) => {
@@ -150,3 +155,14 @@ Promise.all([
     // tslint:disable-next-line
     console.log(error.stack);
 });
+
+function initGui(priorityGroups: PriorityGroup[], updateGeneralization: () => void) {
+    priorityGroups.forEach((group, i) => {
+        const folder = gui.addFolder(`Group ${i}`);
+        const safeZone = folder.add(group, 'safeZone', 0, 200);
+        const margin = folder.add(group, 'margin', 0, 200);
+        safeZone.onChange(updateGeneralization);
+        margin.onChange(updateGeneralization);
+        folder.open();
+    });
+}
