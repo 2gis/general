@@ -20,9 +20,16 @@ interface ApiMarker {
 }
 
 function loadMarkersData(): Promise<ApiMarker[]> {
-    return fetch('./demo/search.json')
+    const m1 = fetch('./demo/search1.json')
         .then((res) => res.json())
         .then((data: any) => data.result.items as ApiMarker[]);
+
+    const m2 = fetch('./demo/search2.json')
+        .then((res) => res.json())
+        .then((data: any) => data.result.items as ApiMarker[]);
+
+    return Promise.all([m1, m2])
+        .then(([m1, m2]) => m1.concat(m2));
 }
 
 function loadMapsApi(): Promise<L.Map> {
@@ -87,16 +94,16 @@ Promise.all([
 
     const priorityGroups: PriorityGroup[] = [{
         iconIndex: 0,
-        safeZone: 0,
-        margin: 0,
+        safeZone: 20,
+        margin: 2,
     }, {
         iconIndex: 1,
-        safeZone: 100,
-        margin: 50,
+        safeZone: 12,
+        margin: 0,
     }, {
         iconIndex: 2,
-        safeZone: 0,
-        margin: 0,
+        safeZone: 2,
+        margin: 2,
     }];
 
     const config = {
