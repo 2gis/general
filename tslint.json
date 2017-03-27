@@ -27,6 +27,7 @@
         "multiline": "always"
       }
     ],
+    "no-bitwise": false,
     "no-string-literal": false,
     "no-var-requires": false,
     "object-curly-spacing": [
