@@ -22,6 +22,7 @@ const gui = new dat.GUI();
 
 type Marker = DrawMarker & GeneralizeMarker & {
     mapPoint: [number, number],
+    drawingOffsets?: number[];
 };
 
 const priorityGroups: PriorityGroup[] = [{

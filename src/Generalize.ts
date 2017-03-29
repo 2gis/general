@@ -17,7 +17,6 @@ export interface Marker {
     groupIndex: number;
 
     iconIndex?: number; // Индекс спрайта в атласе, добавляется в ходе генерализации
-    drawingOffsets?: number[];
     groupIndexAfterGenerelize?: number;
 }
 
