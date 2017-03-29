@@ -1,17 +1,19 @@
+export type Vec2 = [number, number];
+
 export interface Sprite {
-    size: [number, number];
-    anchor: [number, number];
+    size: Vec2;
+    anchor: Vec2;
 }
 
 export interface Atlas {
     sprites: Sprite[];
 }
 
-export type LngLat = [number, number];
+export type LngLat = Vec2;
 
 export interface Marker {
     position: LngLat;
-    pixelPosition: [number, number];
+    pixelPosition: Vec2;
     groupIndex: number;
 
     iconIndex?: number; // Индекс спрайта в атласе, добавляется в ходе генерализации
@@ -23,6 +25,7 @@ export interface PriorityGroup {
     iconIndex: number; // Индекс спрайта в атласе
     safeZone: number; // Отступ чтобы встать
     margin: number; // Отступ после того как встал
+    degradation: number; // Отступ для области в которой все остальные маркера будут деградировать
 }
 
 export interface BBox {
@@ -41,21 +44,30 @@ export function generalize(
 ): Marker[] {
     const width = bounds.maxX - bounds.minX;
     const height = bounds.maxY - bounds.minY;
-    const arr = new Uint8Array(width * height + 8 >> 3);
+
+    const degradationPlane = new Uint8Array(width * height + 8 >> 3);
+    const plane = new Uint8Array(width * height + 8 >> 3);
 
     for (let i = 0; i < markers.length; i++) {
         const marker = markers[i];
         if (marker.groupIndexAfterGenerelize !== undefined) {
             const { iconIndex, margin } = priorityGroups[marker.groupIndexAfterGenerelize];
             const sprite = atlas.sprites[iconIndex];
-            const insertBBox = createBBox(bounds, retinaFactor, sprite, marker, margin);
-            putToArray(arr, width, insertBBox);
+
+            if (!sprite) {
+                // smth shit
+                continue;
+            }
+
+            const { size, anchor } = sprite;
+            const insertBBox = createBBox(width, height, retinaFactor, size, anchor, marker.pixelPosition, margin);
+            putToArray(plane, width, insertBBox);
         }
     }
 
     for (let i = 0; i < priorityGroups.length; i++) {
         const group = priorityGroups[i];
-        const { safeZone, iconIndex, margin } = group;
+        const { safeZone, iconIndex, margin, degradation } = group;
         const sprite = atlas.sprites[iconIndex];
 
         if (!sprite) {
@@ -63,24 +75,32 @@ export function generalize(
             continue;
         }
 
+        const { size, anchor } = sprite;
+
         for (let j = 0; j < markers.length; j++) {
             const marker = markers[j];
             if (marker.groupIndex > i || marker.iconIndex !== -1) {
                 continue;
             }
 
-            const collideBBox = createBBox(bounds, retinaFactor, sprite, marker, safeZone);
+            const collideBBox = createBBox(width, height, retinaFactor, size, anchor, marker.pixelPosition, safeZone);
 
-            if (bboxIsEmpty(collideBBox)) {
+            if (bboxIsEmpty(collideBBox) ||
+                (marker.groupIndex === i && collide(degradationPlane, width, collideBBox))
+            ) {
                 continue;
             }
 
-            if (collide(arr, width, collideBBox)) {
-                const insertBBox = createBBox(bounds, retinaFactor, sprite, marker, margin);
-                if (bboxIsEmpty(insertBBox)) {
+            if (!collide(plane, width, collideBBox)) {
+                const marginBBox = createBBox(width, height, retinaFactor, size, anchor, marker.pixelPosition, margin);
+                if (bboxIsEmpty(marginBBox)) {
                     continue;
                 }
-                putToArray(arr, width, insertBBox);
+                const degradationBBox = createBBox(width, height, retinaFactor, size, anchor,
+                    marker.pixelPosition, degradation);
+
+                putToArray(plane, width, marginBBox);
+                putToArray(degradationPlane, width, degradationBBox);
                 marker.iconIndex = iconIndex;
                 marker.groupIndexAfterGenerelize = i;
             }
@@ -112,11 +132,11 @@ function collide(arr: Uint8Array, width: number, bbox: BBox): boolean {
         }
 
         if (sum !== 0) {
-            return false;
+            return true;
         }
     }
 
-    return true;
+    return false;
 }
 
 function putToArray(arr: Uint8Array, width: number, bbox: BBox) {
@@ -146,17 +166,14 @@ function bboxIsEmpty(a: BBox): boolean {
 }
 
 function createBBox(
-    bounds: BBox,
+    width: number,
+    height: number,
     retinaFactor: number,
-    sprite: Sprite,
-    marker: Marker,
-    offset: number = 0,
+    size: Vec2,
+    anchor: Vec2,
+    position: Vec2,
+    offset: number,
 ): BBox {
-    const position = marker.pixelPosition;
-    const { size, anchor } = sprite;
-    const width = bounds.maxX - bounds.minX;
-    const height = bounds.maxY - bounds.minY;
-
     const x1 = position[0] - size[0] * anchor[0] / retinaFactor - offset | 0;
     const y1 = position[1] - size[1] * anchor[1] / retinaFactor - offset | 0;
 

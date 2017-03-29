@@ -97,14 +97,17 @@ Promise.all([
         iconIndex: 0,
         safeZone: 20,
         margin: 2,
+        degradation: 100,
     }, {
         iconIndex: 1,
         safeZone: 12,
         margin: 0,
+        degradation: 0,
     }, {
         iconIndex: 2,
         safeZone: 2,
         margin: 2,
+        degradation: 0,
     }];
 
     const config = {
@@ -137,11 +140,13 @@ Promise.all([
             updateGeneralization();
         };
         priorityGroups.forEach((group, i) => {
-            const folder = gui.addFolder(`Group ${i}`);
+            const folder = gui.addFolder('Group ' + i);
             const safeZone = folder.add(group, 'safeZone', 0, 200);
             const margin = folder.add(group, 'margin', 0, 200);
+            const degradation = folder.add(group, 'degradation', 0, 200);
             safeZone.onChange(datGuiOnchange);
             margin.onChange(datGuiOnchange);
+            degradation.onChange(datGuiOnchange);
             folder.open();
         });
         const drawingOffsets = gui.add(config, 'drawingOffsets');
@@ -185,6 +190,7 @@ Promise.all([
                         0,
                         group.safeZone,
                         group.margin,
+                        group.degradation,
                     ];
                 }
             }
