@@ -14,7 +14,7 @@
     "2gis-maps": "^3.2.0",
     "@types/leaflet": "^1.0.56",
     "@types/rbush": "^2.0.2",
-    "markerdrawer": "https://github.com/Trufi/MarkerDrawer.git#cda2d9a6810db4488669663b0325a9932c3146be",
+    "markerdrawer": "https://github.com/Trufi/MarkerDrawer.git#2ee236c757ad070a13637f97d923d9ce024da345",
     "rbush": "^2.0.1",
     "ts-loader": "^2.0.3",
     "tslib": "^1.6.0",
