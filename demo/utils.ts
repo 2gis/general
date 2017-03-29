@@ -27,7 +27,7 @@ export function latLngToMapPoint(lngLat: [number, number]): [number, number] {
     ];
 }
 
-interface ApiMarker {
+export interface ApiMarker {
     lon: number;
     lat: number;
     is_advertising: boolean;
