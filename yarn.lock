@@ -1503,9 +1503,9 @@ lru-cache@^4.0.0:
     pseudomap "^1.0.1"
     yallist "^2.0.0"
 
-"markerdrawer@https://github.com/Trufi/MarkerDrawer.git#2ee236c757ad070a13637f97d923d9ce024da345":
+"markerdrawer@https://github.com/2gis/markerdrawer.git#e819b2678eaca07bcac0046977b31efc11d3c7d0":
   version "0.0.1"
-  resolved "https://github.com/Trufi/MarkerDrawer.git#2ee236c757ad070a13637f97d923d9ce024da345"
+  resolved "https://github.com/2gis/markerdrawer.git#e819b2678eaca07bcac0046977b31efc11d3c7d0"
 
 media-typer@0.3.0:
   version "0.3.0"
