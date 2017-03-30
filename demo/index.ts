@@ -5,6 +5,7 @@ import {
     lngLatToZoomPoint,
     mapPointToZoomPoint,
     latLngToMapPoint,
+    ApiMarker,
 } from './utils';
 import {
     MarkerDrawer,
@@ -22,23 +23,23 @@ const gui = new dat.GUI();
 
 type Marker = DrawMarker & GeneralizeMarker & {
     mapPoint: [number, number],
-    drawingOffsets?: number[];
+    data: ApiMarker,
 };
 
 const priorityGroups: PriorityGroup[] = [{
     iconIndex: 0,
-    safeZone: 20,
-    margin: 2,
-    degradation: 100,
-}, {
-    iconIndex: 1,
-    safeZone: 12,
+    safeZone: 0,
     margin: 0,
     degradation: 0,
 }, {
+    iconIndex: 1,
+    safeZone: 30,
+    margin: 0,
+    degradation: 140,
+}, {
     iconIndex: 2,
-    safeZone: 2,
-    margin: 2,
+    safeZone: 15,
+    margin: 0,
     degradation: 0,
 }];
 
@@ -63,11 +64,12 @@ Promise.all([
         marker.groupIndex = markersData[i].is_advertising ? 0 : 1;
         marker.mapPoint = latLngToMapPoint(marker.position);
         marker.iconIndex = -1;
+        marker.data = markerData;
         markers.push(marker);
     }
 
     const config = {
-        drawingOffsets: false,
+        groups: priorityGroups.map(() => ({ drawingOffsets: false })),
     };
 
     const retinaFactor = window.devicePixelRatio;
@@ -92,13 +94,13 @@ Promise.all([
         const safeZone = folder.add(group, 'safeZone', 0, 200);
         const margin = folder.add(group, 'margin', 0, 200);
         const degradation = folder.add(group, 'degradation', 0, 200);
+        const drawingOffsets = folder.add(config.groups[i], 'drawingOffsets');
         safeZone.onChange(datGuiOnchange);
         margin.onChange(datGuiOnchange);
         degradation.onChange(datGuiOnchange);
+        drawingOffsets.onChange(datGuiOnchange);
         folder.open();
     });
-    const drawingOffsets = gui.add(config, 'drawingOffsets');
-    drawingOffsets.onChange(datGuiOnchange);
 
     function updateGeneralization() {
         // tslint:disable-next-line
@@ -129,20 +131,26 @@ Promise.all([
         // tslint:disable-next-line
         console.timeEnd('gen');
 
-        if (config.drawingOffsets) {
+        const drawingOffsets = config.groups.some((g) => g.drawingOffsets);
+
+        if (drawingOffsets) {
             for (let i = 0; i < markers.length; i++) {
                 const marker = markers[i];
                 if (marker.iconIndex === -1 || marker.iconIndex === undefined) {
                     continue;
                 }
-                const group = priorityGroups[marker.iconIndex];
 
-                marker.drawingOffsets = [
-                    0,
-                    group.safeZone,
-                    group.margin,
-                    group.degradation,
-                ];
+                if (config.groups[marker.iconIndex].drawingOffsets) {
+                    const group = priorityGroups[marker.iconIndex];
+                    marker.drawingOffsets = [
+                        0,
+                        group.safeZone,
+                        group.margin,
+                        group.degradation,
+                    ];
+                } else {
+                    marker.drawingOffsets = [];
+                }
             }
         }
 
@@ -151,7 +159,7 @@ Promise.all([
         }
 
         markerDrawer = new MarkerDrawer(markers, atlas, {
-            debugDrawing: config.drawingOffsets,
+            debugDrawing: drawingOffsets,
         });
         markerDrawer.on('click', (ev) => {
             ev.markers.forEach((index) => {
