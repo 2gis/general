@@ -29,16 +29,16 @@ type Marker = DrawMarker & GeneralizeMarker & {
 const priorityGroups: PriorityGroup[] = [{
     iconIndex: 0,
     safeZone: 0,
+    margin: 5,
+    degradation: 160,
+}, {
+    iconIndex: 1,
+    safeZone: 5,
     margin: 0,
     degradation: 0,
 }, {
-    iconIndex: 1,
-    safeZone: 30,
-    margin: 0,
-    degradation: 140,
-}, {
     iconIndex: 2,
-    safeZone: 15,
+    safeZone: 5,
     margin: 0,
     degradation: 0,
 }];
@@ -48,9 +48,13 @@ Promise.all([
     loadAtlas(),
     loadMarkersData(),
 ]).then(([map, atlas, markersData]) => {
+    window['map'] = map;
+
     // const markersData: any[] = [
-    //     { lon: 37.671733856201, lat: 55.73620223999, is_advertising: true },
-    //     { lon: 37.657371520996, lat: 55.709766387939, is_advertising: false },
+    //     { lon: 38.016845703125, lat: 55.624744415283, is_advertising: false },
+    //     { lon: 38.057151794434, lat: 55.630252838135, is_advertising: false },
+    //     { lon: 38.029899597168, lat: 55.624053955078, is_advertising: false },
+    //     { lon: 38.040855407715, lat: 55.628795623779, is_advertising: false },
     // ];
 
     const markers: Marker[] = [];

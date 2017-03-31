@@ -1,4 +1,4 @@
-export type Vec2 = [number, number];
+export type Vec2 = [number, number] | Float32Array;
 
 export interface Sprite {
     size: Vec2;
@@ -41,7 +41,7 @@ export function generalize(
     atlas: Atlas,
     markers: Marker[],
 ): Marker[] {
-    const width = bounds.maxX - bounds.minX;
+    const width = (bounds.maxX - bounds.minX >> 3) + 1 << 3; // Ширина должна быть кратна 8
     const height = bounds.maxY - bounds.minY;
 
     const degradationPlane = new Uint8Array(width * height + 8 >> 3);
@@ -50,7 +50,7 @@ export function generalize(
     for (let i = 0; i < markers.length; i++) {
         const marker = markers[i];
         if (marker.groupIndexAfterGenerelize !== undefined) {
-            const { iconIndex, margin } = priorityGroups[marker.groupIndexAfterGenerelize];
+            const { iconIndex, margin, degradation } = priorityGroups[marker.groupIndexAfterGenerelize];
             const sprite = atlas.sprites[iconIndex];
 
             if (!sprite) {
@@ -59,8 +59,12 @@ export function generalize(
             }
 
             const { size, anchor } = sprite;
-            const insertBBox = createBBox(width, height, retinaFactor, size, anchor, marker.pixelPosition, margin);
-            putToArray(plane, width, insertBBox);
+            const marginBBox = createBBox(width, height, retinaFactor, size, anchor, marker.pixelPosition, margin);
+            const degradationBBox = createBBox(width, height, retinaFactor, size, anchor,
+                marker.pixelPosition, degradation);
+
+            putToArray(plane, width, marginBBox);
+            putToArray(degradationPlane, width, degradationBBox);
         }
     }
 
@@ -75,6 +79,7 @@ export function generalize(
         }
 
         const { size, anchor } = sprite;
+        const currentDegradationPlane = degradationPlane.slice(0);
 
         for (let j = 0; j < markers.length; j++) {
             const marker = markers[j];
@@ -85,7 +90,7 @@ export function generalize(
             const collideBBox = createBBox(width, height, retinaFactor, size, anchor, marker.pixelPosition, safeZone);
 
             if (bboxIsEmpty(collideBBox) ||
-                (marker.groupIndex === i && collide(degradationPlane, width, collideBBox))
+                (marker.groupIndex === i && collide(currentDegradationPlane, width, collideBBox))
             ) {
                 continue;
             }

@@ -72,10 +72,10 @@ export function loadAtlas(): Promise<Atlas> {
 
     const atlas = new Atlas([{
         image: m0,
-        anchor: [0.5, 0.5],
+        anchor: [0.5, 1],
     }, {
         image: m1,
-        anchor: [0.5, 0.5],
+        anchor: [0.5, 1],
     }, {
         image: m2,
         anchor: [0.5, 0.5],
