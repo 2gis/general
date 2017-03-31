@@ -27,6 +27,7 @@
         "multiline": "always"
       }
     ],
+    "forin": false,
     "no-bitwise": false,
     "no-string-literal": false,
     "no-var-requires": false,
