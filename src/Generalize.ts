@@ -44,8 +44,10 @@ export function generalize(
     const width = (bounds.maxX - bounds.minX >> 3) + 1 << 3; // Ширина должна быть кратна 8
     const height = bounds.maxY - bounds.minY;
 
-    const degradationPlane = new Uint8Array(width * height + 8 >> 3);
-    const plane = new Uint8Array(width * height + 8 >> 3);
+    const planeLength = width * height + 8 >> 3;
+    const currentDegradationPlane = new Uint8Array(planeLength);
+    const degradationPlane = new Uint8Array(planeLength);
+    const plane = new Uint8Array(planeLength);
 
     for (let i = 0; i < markers.length; i++) {
         const marker = markers[i];
@@ -79,7 +81,7 @@ export function generalize(
         }
 
         const { size, anchor } = sprite;
-        const currentDegradationPlane = degradationPlane.slice(0);
+        currentDegradationPlane.set(degradationPlane);
 
         for (let j = 0; j < markers.length; j++) {
             const marker = markers[j];
