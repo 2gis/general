@@ -70,7 +70,7 @@ export function generalize(
 
     for (let i = 0; i < priorityGroups.length; i++) {
         const group = priorityGroups[i];
-        const { safeZone, iconIndex, margin, degradation } = group;
+        let { safeZone, iconIndex, margin, degradation } = group;
         const sprite = atlas.sprites[iconIndex];
 
         if (!sprite) {
@@ -87,19 +87,19 @@ export function generalize(
                 continue;
             }
 
-            const collideBBox = createBBox(width, height, retinaFactor, size, anchor, marker.pixelPosition, safeZone);
-
-            if (bboxIsEmpty(collideBBox) ||
-                (marker.groupIndex === i && collide(currentDegradationPlane, width, collideBBox))
+            const marginBBox = createBBox(width, height, retinaFactor, size, anchor, marker.pixelPosition, margin);
+            if (bboxIsEmpty(marginBBox) ||
+                (marker.groupIndex === i && collide(currentDegradationPlane, width, marginBBox))
             ) {
                 continue;
             }
 
+            const collideBBox = createBBox(width, height, retinaFactor, size, anchor, marker.pixelPosition, safeZone);
+            if (bboxIsEmpty(collideBBox)) {
+                continue;
+            }
+
             if (!collide(plane, width, collideBBox)) {
-                const marginBBox = createBBox(width, height, retinaFactor, size, anchor, marker.pixelPosition, margin);
-                if (bboxIsEmpty(marginBBox)) {
-                    continue;
-                }
                 const degradationBBox = createBBox(width, height, retinaFactor, size, anchor,
                     marker.pixelPosition, degradation);
 

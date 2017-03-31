@@ -30,10 +30,10 @@ const priorityGroups: PriorityGroup[] = [{
     iconIndex: 0,
     safeZone: 0,
     margin: 5,
-    degradation: 160,
+    degradation: 180,
 }, {
     iconIndex: 1,
-    safeZone: 5,
+    safeZone: 20,
     margin: 0,
     degradation: 0,
 }, {
