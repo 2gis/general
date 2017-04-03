@@ -123,7 +123,7 @@ Promise.all([
         if (resetLastGroupIndex) {
             for (let i = 0; i < markers.length; i++) {
                 const marker = markers[i];
-                marker.groupIndexAfterGenerelize = undefined;
+                marker.prevGroupIndex = undefined;
                 marker.iconIndex = -1;
             }
             resetLastGroupIndex = false;
@@ -131,50 +131,51 @@ Promise.all([
 
         // tslint:disable-next-line
         console.time('gen');
-        generalize(bounds, retinaFactor, priorityGroups, atlas, markers);
-        // tslint:disable-next-line
-        console.timeEnd('gen');
+        generalize(bounds, retinaFactor, priorityGroups, atlas, markers).then(() => {
+            // tslint:disable-next-line
+            console.timeEnd('gen');
 
-        const drawingOffsets = config.groups.some((g) => g.drawingOffsets);
+            const drawingOffsets = config.groups.some((g) => g.drawingOffsets);
 
-        if (drawingOffsets) {
-            for (let i = 0; i < markers.length; i++) {
-                const marker = markers[i];
-                if (marker.iconIndex === -1 || marker.iconIndex === undefined) {
-                    continue;
-                }
+            if (drawingOffsets) {
+                for (let i = 0; i < markers.length; i++) {
+                    const marker = markers[i];
+                    if (marker.iconIndex === -1 || marker.iconIndex === undefined) {
+                        continue;
+                    }
 
-                if (config.groups[marker.iconIndex].drawingOffsets) {
-                    const group = priorityGroups[marker.iconIndex];
-                    marker.drawingOffsets = [
-                        0,
-                        group.safeZone,
-                        group.margin,
-                        group.degradation,
-                    ];
-                } else {
-                    marker.drawingOffsets = [];
+                    if (config.groups[marker.iconIndex].drawingOffsets) {
+                        const group = priorityGroups[marker.iconIndex];
+                        marker.drawingOffsets = [
+                            0,
+                            group.safeZone,
+                            group.margin,
+                            group.degradation,
+                        ];
+                    } else {
+                        marker.drawingOffsets = [];
+                    }
                 }
             }
-        }
 
-        if (markerDrawer) {
-            markerDrawer.remove();
-        }
+            if (markerDrawer) {
+                markerDrawer.remove();
+            }
 
-        markerDrawer = new MarkerDrawer(markers, atlas, {
-            debugDrawing: drawingOffsets,
-        });
-        markerDrawer.on('click', (ev) => {
-            ev.markers.forEach((index) => {
-                const marker = markers[index];
-                // tslint:disable-next-line
-                console.log('click', `{ lon: ${marker.position[0]}, lat: ${marker.position[1]} }`, marker);
+            markerDrawer = new MarkerDrawer(markers, atlas, {
+                debugDrawing: drawingOffsets,
             });
+            markerDrawer.on('click', (ev) => {
+                ev.markers.forEach((index) => {
+                    const marker = markers[index];
+                    // tslint:disable-next-line
+                    console.log('click', `{ lon: ${marker.position[0]}, lat: ${marker.position[1]} }`, marker);
+                });
+            });
+            markerDrawer.addTo(map);
+            // tslint:disable-next-line
+            console.timeEnd('update');
         });
-        markerDrawer.addTo(map);
-        // tslint:disable-next-line
-        console.timeEnd('update');
     }
 
     map.on('moveend', updateGeneralization);

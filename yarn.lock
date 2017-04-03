@@ -21,6 +21,10 @@
   dependencies:
     "@types/geojson" "*"
 
+"@types/node@^7.0.12":
+  version "7.0.12"
+  resolved "https://registry.yarnpkg.com/@types/node/-/node-7.0.12.tgz#ae5f67a19c15f752148004db07cbbb372e69efc9"
+
 "@types/rbush@^2.0.2":
   version "2.0.2"
   resolved "https://registry.yarnpkg.com/@types/rbush/-/rbush-2.0.2.tgz#d297564680491973ab9dc5ec3afd7470487f530a"
@@ -2726,6 +2730,12 @@ window-size@0.1.0:
 wordwrap@0.0.2, wordwrap@~0.0.2:
   version "0.0.2"
   resolved "https://registry.yarnpkg.com/wordwrap/-/wordwrap-0.0.2.tgz#b79669bb42ecb409f83d583cad52ca17eaa1643f"
+
+worker-loader@^0.8.0:
+  version "0.8.0"
+  resolved "https://registry.yarnpkg.com/worker-loader/-/worker-loader-0.8.0.tgz#13582960dcd7d700dc829d3fd252a7561696167e"
+  dependencies:
+    loader-utils "^1.0.2"
 
 wrap-ansi@^2.0.0:
   version "2.1.0"
