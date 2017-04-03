@@ -15,7 +15,7 @@
     "2gis-maps": "^3.2.0",
     "@types/leaflet": "^1.0.56",
     "@types/rbush": "^2.0.2",
-    "markerdrawer": "https://github.com/2gis/markerdrawer.git#e819b2678eaca07bcac0046977b31efc11d3c7d0",
+    "markerdrawer": "https://github.com/2gis/markerdrawer.git#64b237e8839f3dff0d8df771120649c8622804e6",
     "rbush": "^2.0.1",
     "ts-loader": "^2.0.3",
     "tslib": "^1.6.0",

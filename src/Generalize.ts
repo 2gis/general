@@ -1,4 +1,4 @@
-export type Vec2 = [number, number] | Float32Array;
+export type Vec2 = [number, number] | Float64Array;
 
 export interface Sprite {
     size: Vec2;
