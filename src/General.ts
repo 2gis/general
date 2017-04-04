@@ -10,11 +10,11 @@ import {
 
 const Worker = require('worker-loader?inline&fallback=false!ts-loader!./worker');
 
-const pixelPositionXOffset = offsets['pixelPositionX'];
-const pixelPositionYOffset = offsets['pixelPositionY'];
-const groupIndexOffset = offsets['groupIndex'];
-const iconIndexOffset = offsets['iconIndex'];
-const prevGroupIndexOffset = offsets['prevGroupIndex'];
+const pixelPositionXOffset = offsets.pixelPositionX;
+const pixelPositionYOffset = offsets.pixelPositionY;
+const groupIndexOffset = offsets.groupIndex;
+const iconIndexOffset = offsets.iconIndex;
+const prevGroupIndexOffset = offsets.prevGroupIndex;
 
 export class General {
     private worker = new Worker();

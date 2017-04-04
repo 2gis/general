@@ -3,11 +3,11 @@ import { stride, offsets } from './markerArray';
 
 declare const postMessage: (message: any, transfer?: any[]) => void;
 
-const iconIndexOffset = offsets['iconIndex'];
-const groupIndexOffset = offsets['groupIndex'];
-const prevGroupIndexOffset = offsets['prevGroupIndex'];
-const pixelPositionXOffset = offsets['pixelPositionX'];
-const pixelPositionYOffset = offsets['pixelPositionY'];
+const iconIndexOffset = offsets.iconIndex;
+const groupIndexOffset = offsets.groupIndex;
+const prevGroupIndexOffset = offsets.prevGroupIndex;
+const pixelPositionXOffset = offsets.pixelPositionX;
+const pixelPositionYOffset = offsets.pixelPositionY;
 
 const collideBBox: BBox = { minX: 0, minY: 0, maxX: 0, maxY: 0 };
 const marginBBox: BBox = { minX: 0, minY: 0, maxX: 0, maxY: 0 };
