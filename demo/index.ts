@@ -1,6 +1,6 @@
+import * as DG from '2gis-maps';
 import {
     loadAtlas,
-    loadMapsApi,
     loadMarkersData,
     lngLatToZoomPoint,
     mapPointToZoomPoint,
@@ -43,11 +43,15 @@ const priorityGroups: PriorityGroup[] = [{
     degradation: 0,
 }];
 
+const map = DG.map('map', {
+    center: [55.75088330688495, 37.62062072753907],
+    zoom: 11,
+});
+
 Promise.all([
-    loadMapsApi(),
     loadAtlas(),
     loadMarkersData(),
-]).then(([map, atlas, markersData]) => {
+]).then(([atlas, markersData]) => {
     window['map'] = map;
 
     // const markersData: any[] = [
