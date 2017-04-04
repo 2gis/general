@@ -1,6 +1,4 @@
 const members = [
-    'positionX',
-    'positionY',
     'pixelPositionX',
     'pixelPositionY',
     'groupIndex',

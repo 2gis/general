@@ -10,8 +10,6 @@ import {
 
 const Worker = require('worker-loader?inline&fallback=false!ts-loader!./worker');
 
-const positionXOffset = offsets['positionX'];
-const positionYOffset = offsets['positionY'];
 const pixelPositionXOffset = offsets['pixelPositionX'];
 const pixelPositionYOffset = offsets['pixelPositionY'];
 const groupIndexOffset = offsets['groupIndex'];
@@ -34,8 +32,6 @@ function pack(markers: Marker[]): Float32Array {
         const iconIndex = marker.iconIndex;
         const prevGroupIndex = marker.prevGroupIndex;
 
-        markerArray[markerOffset + positionXOffset] = marker.position[0];
-        markerArray[markerOffset + positionYOffset] = marker.position[1];
         markerArray[markerOffset + pixelPositionXOffset] = marker.pixelPosition[0];
         markerArray[markerOffset + pixelPositionYOffset] = marker.pixelPosition[1];
         markerArray[markerOffset + groupIndexOffset] = marker.groupIndex;
