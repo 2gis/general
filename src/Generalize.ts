@@ -1,5 +1,12 @@
 import { stride, offsets } from './markerArray';
-import { BBox, PriorityGroup, Atlas, Marker, WorkerMessage, Job } from './types';
+import {
+    BBox,
+    PriorityGroup,
+    Atlas,
+    Marker,
+    WorkerMessage,
+    Job
+} from './types';
 
 const Worker = require('worker-loader?inline&fallback=false!ts-loader!./worker');
 
@@ -83,19 +90,19 @@ export function generalize(
         priorityGroups,
         markerCount: markers.length,
         sprites: atlas.sprites,
-        markers: pack(markers)
+        markers: pack(markers),
     };
 
-    return new Promise(resolve => {
-        queue.push({message, markers, resolve});
+    return new Promise((resolve) => {
+        queue.push({ message, markers, resolve });
         dequeue();
 
-        worker.onmessage = event => {
+        worker.onmessage = (event) => {
             if (currentJob === undefined) {
                 return;
             }
 
-            const {markers, resolve} = currentJob;
+            const { markers, resolve } = currentJob;
 
             recordResult(markers, event.data);
             markerArray = event.data;

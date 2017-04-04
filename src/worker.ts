@@ -9,11 +9,11 @@ const prevGroupIndexOffset = offsets['prevGroupIndex'];
 const pixelPositionXOffset = offsets['pixelPositionX'];
 const pixelPositionYOffset = offsets['pixelPositionY'];
 
-const collideBBox: BBox = {minX: 0, minY: 0, maxX: 0, maxY: 0};
-const marginBBox: BBox = {minX: 0, minY: 0, maxX: 0, maxY: 0};
-const degradationBBox: BBox = {minX: 0, minY: 0, maxX: 0, maxY: 0};
+const collideBBox: BBox = { minX: 0, minY: 0, maxX: 0, maxY: 0 };
+const marginBBox: BBox = { minX: 0, minY: 0, maxX: 0, maxY: 0 };
+const degradationBBox: BBox = { minX: 0, minY: 0, maxX: 0, maxY: 0 };
 
-onmessage = event => {
+onmessage = (event) => {
     const data: WorkerMessage = event.data;
     const { bounds, retinaFactor, priorityGroups, sprites, markers, markerCount } = data;
 
@@ -91,7 +91,7 @@ onmessage = event => {
 
             if (!collide(plane, width, collideBBox)) {
                 createBBox(degradationBBox, width, height, retinaFactor, size, anchor,
-                    pixelPositionX, pixelPositionY,degradation);
+                    pixelPositionX, pixelPositionY, degradation);
 
                 putToArray(plane, width, marginBBox);
                 putToArray(degradationPlane, width, degradationBBox);
