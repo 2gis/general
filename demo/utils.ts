@@ -1,4 +1,3 @@
-import * as DG from '2gis-maps';
 import { Atlas } from 'markerdrawer';
 
 const R = 6378137;
@@ -44,19 +43,6 @@ export function loadMarkersData(): Promise<ApiMarker[]> {
 
     return Promise.all([m1, m2])
         .then(([m1, m2]) => m1.concat(m2));
-}
-
-export function loadMapsApi(): Promise<L.Map> {
-    return new Promise((res) => {
-        DG.then(() => {
-            const map = L.map('map', {
-                center: [55.75088330688495, 37.62062072753907],
-                zoom: 11,
-            });
-
-            res(map);
-        });
-    });
 }
 
 export function loadAtlas(): Promise<Atlas> {
