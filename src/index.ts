@@ -1,6 +1,6 @@
 export {
-    generalize,
-} from './Generalize';
+    General,
+} from './General';
 
 export {
     Marker,

@@ -13,7 +13,7 @@ import {
 } from 'markerdrawer';
 import {
     BBox,
-    generalize,
+    General,
     Marker as GeneralizeMarker,
     PriorityGroup,
 } from '../src';
@@ -88,6 +88,8 @@ Promise.all([
     let markerDrawer;
     let resetLastGroupIndex = false;
 
+    const general = new General();
+
     // dat gui
     const datGuiOnchange = () => {
         resetLastGroupIndex = true;
@@ -131,7 +133,7 @@ Promise.all([
 
         // tslint:disable-next-line
         console.time('gen');
-        generalize(bounds, retinaFactor, priorityGroups, atlas, markers).then(() => {
+        general.generalize(bounds, retinaFactor, priorityGroups, atlas, markers).then(() => {
             // tslint:disable-next-line
             console.timeEnd('gen');
 
