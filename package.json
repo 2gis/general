@@ -26,6 +26,7 @@
   "devDependencies": {
     "2gis-maps": "^3.2.0",
     "@types/leaflet": "^1.0.56",
+    "@types/node": "^7.0.12",
     "@types/rbush": "^2.0.2",
     "markerdrawer": "https://github.com/2gis/markerdrawer.git#64b237e8839f3dff0d8df771120649c8622804e6",
     "rbush": "^2.0.1",
@@ -35,6 +36,7 @@
     "tslint-eslint-rules": "^3.5.1",
     "typescript": "^2.2.1",
     "webpack": "^2.3.1",
-    "webpack-dev-server": "^2.4.2"
+    "webpack-dev-server": "^2.4.2",
+    "worker-loader": "^0.8.0"
   }
 }

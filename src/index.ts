@@ -1,6 +1,9 @@
 export {
-    generalize,
+    General,
+} from './General';
+
+export {
     Marker,
     PriorityGroup,
     BBox,
-} from './Generalize';
+} from './types';
