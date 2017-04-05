@@ -3,12 +3,6 @@ import { stride, offsets } from './markerArray';
 
 declare const postMessage: (message: any, transfer?: any[]) => void;
 
-const iconIndexOffset = offsets.iconIndex;
-const groupIndexOffset = offsets.groupIndex;
-const prevGroupIndexOffset = offsets.prevGroupIndex;
-const pixelPositionXOffset = offsets.pixelPositionX;
-const pixelPositionYOffset = offsets.pixelPositionY;
-
 const collideBBox: BBox = { minX: 0, minY: 0, maxX: 0, maxY: 0 };
 const marginBBox: BBox = { minX: 0, minY: 0, maxX: 0, maxY: 0 };
 const degradationBBox: BBox = { minX: 0, minY: 0, maxX: 0, maxY: 0 };
@@ -26,9 +20,9 @@ onmessage = (event) => {
     const plane = new Uint8Array(planeLength);
 
     for (let i = 0; i < markerCount; i++) {
-        const prevGroupIndex = markers[i * stride + prevGroupIndexOffset];
-        const pixelPositionX = markers[i * stride + pixelPositionXOffset];
-        const pixelPositionY = markers[i * stride + pixelPositionYOffset];
+        const prevGroupIndex = markers[i * stride + offsets.prevGroupIndex];
+        const pixelPositionX = markers[i * stride + offsets.pixelPositionX];
+        const pixelPositionY = markers[i * stride + offsets.pixelPositionY];
 
         if (prevGroupIndex === prevGroupIndex) {
             const { iconIndex, margin, degradation } = priorityGroups[prevGroupIndex];
@@ -66,10 +60,10 @@ onmessage = (event) => {
         for (let j = 0; j < markerCount; j++) {
             const markerOffset = j * stride;
 
-            const groupIndex = markers[markerOffset + groupIndexOffset];
-            const markerIconIndex = markers[markerOffset + iconIndexOffset];
-            const pixelPositionX = markers[markerOffset + pixelPositionXOffset];
-            const pixelPositionY = markers[markerOffset + pixelPositionYOffset];
+            const groupIndex = markers[markerOffset + offsets.groupIndex];
+            const markerIconIndex = markers[markerOffset + offsets.iconIndex];
+            const pixelPositionX = markers[markerOffset + offsets.pixelPositionX];
+            const pixelPositionY = markers[markerOffset + offsets.pixelPositionY];
 
             if (groupIndex > i || markerIconIndex !== -1) {
                 continue;
@@ -96,8 +90,8 @@ onmessage = (event) => {
                 putToArray(plane, width, marginBBox);
                 putToArray(degradationPlane, width, degradationBBox);
 
-                markers[markerOffset + iconIndexOffset] = iconIndex;
-                markers[markerOffset + prevGroupIndexOffset] = i;
+                markers[markerOffset + offsets.iconIndex] = iconIndex;
+                markers[markerOffset + offsets.prevGroupIndex] = i;
             }
         }
     }
