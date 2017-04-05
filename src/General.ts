@@ -10,12 +10,6 @@ import {
 
 const Worker = require('worker-loader?inline&fallback=false!ts-loader!./worker');
 
-const pixelPositionXOffset = offsets.pixelPositionX;
-const pixelPositionYOffset = offsets.pixelPositionY;
-const groupIndexOffset = offsets.groupIndex;
-const iconIndexOffset = offsets.iconIndex;
-const prevGroupIndexOffset = offsets.prevGroupIndex;
-
 export class General {
     private worker = new Worker();
     private queue: Job[] = [];
@@ -78,12 +72,12 @@ export class General {
             const iconIndex = marker.iconIndex;
             const prevGroupIndex = marker.prevGroupIndex;
 
-            this.markerArray[markerOffset + pixelPositionXOffset] = marker.pixelPosition[0];
-            this.markerArray[markerOffset + pixelPositionYOffset] = marker.pixelPosition[1];
-            markerArray[markerOffset + groupIndexOffset] = marker.groupIndex;
-            markerArray[markerOffset + iconIndexOffset] =
+            this.markerArray[markerOffset + offsets.pixelPositionX] = marker.pixelPosition[0];
+            this.markerArray[markerOffset + offsets.pixelPositionY] = marker.pixelPosition[1];
+            markerArray[markerOffset + offsets.groupIndex] = marker.groupIndex;
+            markerArray[markerOffset + offsets.iconIndex] =
                 iconIndex !== undefined ? iconIndex : NaN;
-            markerArray[markerOffset + prevGroupIndexOffset] =
+            markerArray[markerOffset + offsets.prevGroupIndex] =
                 prevGroupIndex !== undefined ? prevGroupIndex : NaN;
         }
 
@@ -109,8 +103,8 @@ export class General {
 
     private recordResult(markers: Marker[], workerMessage: Float32Array) {
         for (let i = 0, markerOffset = 0; i < markers.length; i++, markerOffset = markerOffset + stride) {
-            const iconIndex = workerMessage[markerOffset + iconIndexOffset];
-            const prevGroupIndex = workerMessage[markerOffset + prevGroupIndexOffset];
+            const iconIndex = workerMessage[markerOffset + offsets.iconIndex];
+            const prevGroupIndex = workerMessage[markerOffset + offsets.prevGroupIndex];
 
             markers[i].iconIndex =
                 iconIndex !== iconIndex ? undefined : iconIndex;
