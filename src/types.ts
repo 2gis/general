@@ -3,6 +3,7 @@ export type Vec2 = [number, number] | Float64Array;
 export interface Sprite {
     size: Vec2;
     anchor: Vec2;
+    pixelDensity: number;
 }
 
 export interface Atlas {
@@ -36,7 +37,7 @@ export interface BBox {
 
 export interface WorkerMessage {
     bounds: BBox;
-    retinaFactor: number;
+    pixelRatio: number;
     priorityGroups: PriorityGroup[];
     sprites: Sprite[];
     markerCount: number;

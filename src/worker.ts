@@ -9,7 +9,7 @@ const degradationBBox: BBox = { minX: 0, minY: 0, maxX: 0, maxY: 0 };
 
 onmessage = (event) => {
     const data: WorkerMessage = event.data;
-    const { bounds, retinaFactor, priorityGroups, sprites, markers, markerCount } = data;
+    const { bounds, pixelRatio, priorityGroups, sprites, markers, markerCount } = data;
 
     const width = (bounds.maxX - bounds.minX >> 3) + 1 << 3; // Ширина должна быть кратна 8
     const height = bounds.maxY - bounds.minY;
@@ -33,10 +33,10 @@ onmessage = (event) => {
                 continue;
             }
 
-            const { size, anchor } = sprite;
-            createBBox(marginBBox, width, height, retinaFactor, size, anchor,
+            const { size, anchor, pixelDensity } = sprite;
+            createBBox(marginBBox, width, height, pixelRatio, size, anchor, pixelDensity,
                 pixelPositionX, pixelPositionY, margin);
-            createBBox(degradationBBox, width, height, retinaFactor, size, anchor,
+            createBBox(degradationBBox, width, height, pixelRatio, size, anchor, pixelDensity,
                 pixelPositionX, pixelPositionY, degradation);
 
             putToArray(plane, width, marginBBox);
@@ -54,7 +54,7 @@ onmessage = (event) => {
             continue;
         }
 
-        const { size, anchor } = sprite;
+        const { size, anchor, pixelDensity } = sprite;
         currentDegradationPlane.set(degradationPlane);
 
         for (let j = 0; j < markerCount; j++) {
@@ -69,7 +69,7 @@ onmessage = (event) => {
                 continue;
             }
 
-            createBBox(marginBBox, width, height, retinaFactor, size, anchor,
+            createBBox(marginBBox, width, height, pixelRatio, size, anchor, pixelDensity,
                 pixelPositionX, pixelPositionY, margin);
             if (bboxIsEmpty(marginBBox) ||
                 (groupIndex === i && collide(currentDegradationPlane, width, marginBBox))
@@ -77,14 +77,14 @@ onmessage = (event) => {
                 continue;
             }
 
-            createBBox(collideBBox, width, height, retinaFactor, size, anchor,
+            createBBox(collideBBox, width, height, pixelRatio, size, anchor, pixelDensity,
                 pixelPositionX, pixelPositionY, safeZone);
             if (bboxIsEmpty(collideBBox)) {
                 continue;
             }
 
             if (!collide(plane, width, collideBBox)) {
-                createBBox(degradationBBox, width, height, retinaFactor, size, anchor,
+                createBBox(degradationBBox, width, height, pixelRatio, size, anchor, pixelDensity,
                     pixelPositionX, pixelPositionY, degradation);
 
                 putToArray(plane, width, marginBBox);
@@ -158,18 +158,21 @@ function createBBox(
     dst: BBox,
     width: number,
     height: number,
-    retinaFactor: number,
+    pixelRatio: number,
     size: Vec2,
     anchor: Vec2,
+    pixelDensity: number,
     positionX: number,
     positionY: number,
     offset: number,
 ): void {
-    const x1 = positionX - size[0] * anchor[0] / retinaFactor - offset | 0;
-    const y1 = positionY - size[1] * anchor[1] / retinaFactor - offset | 0;
+    const spriteScale = pixelRatio / pixelDensity;
 
-    const x2 = positionX + size[0] * (1 - anchor[0]) / retinaFactor + offset | 0;
-    const y2 = positionY + size[1] * (1 - anchor[1]) / retinaFactor + offset | 0;
+    const x1 = positionX * pixelRatio - size[0] * spriteScale * anchor[0] - offset | 0;
+    const y1 = positionY * pixelRatio - size[1] * spriteScale * anchor[1] - offset | 0;
+
+    const x2 = positionX * pixelRatio + size[0] * spriteScale * (1 - anchor[0]) + offset | 0;
+    const y2 = positionY * pixelRatio + size[1] * spriteScale * (1 - anchor[1]) + offset | 0;
 
     dst.minX = x1 > 0 ? (x1 < width ? x1 : width) : 0;
     dst.minY = y1 > 0 ? (y1 < height ? y1 : height) : 0;

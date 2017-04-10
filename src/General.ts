@@ -23,7 +23,6 @@ export class General {
             }
 
             const { markers, resolve } = this.currentJob;
-
             this.recordResult(markers, event.data);
             this.markerArray = event.data;
             this.currentJob = undefined;
@@ -35,14 +34,14 @@ export class General {
 
     public generalize(
         bounds: BBox,
-        retinaFactor: number,
+        pixelRatio: number,
         priorityGroups: PriorityGroup[],
         atlas: Atlas,
         markers: Marker[],
     ): Promise<{}> {
         const message: WorkerMessage = {
             bounds,
-            retinaFactor,
+            pixelRatio,
             priorityGroups,
             markerCount: markers.length,
             sprites: atlas.sprites,
