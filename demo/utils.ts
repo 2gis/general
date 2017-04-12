@@ -46,25 +46,28 @@ export function loadMarkersData(): Promise<ApiMarker[]> {
 }
 
 export function loadAtlas(): Promise<Atlas> {
-    const folder = window.devicePixelRatio > 1 ? 2 : 1;
+    const pixelRatio = window.devicePixelRatio > 1 ? 2 : 1;
     const m0 = new Image();
-    m0.src = 'demo/markers/' + folder + '/pin_commercial.png';
+    m0.src = 'demo/markers/' + pixelRatio + '/pin_commercial.png';
 
     const m1 = new Image();
-    m1.src = 'demo/markers/' + folder + '/pin_regular.png';
+    m1.src = 'demo/markers/' + pixelRatio + '/pin_regular.png';
 
     const m2 = new Image();
-    m2.src = 'demo/markers/' + folder + '/pin_tile.png';
+    m2.src = 'demo/markers/' + pixelRatio + '/pin_tile.png';
 
     const atlas = new Atlas([{
         image: m0,
         anchor: [0.5, 1],
+        pixelDensity: pixelRatio,
     }, {
         image: m1,
         anchor: [0.5, 1],
+        pixelDensity: pixelRatio,
     }, {
         image: m2,
         anchor: [0.5, 0.5],
+        pixelDensity: pixelRatio,
     }]);
 
     return atlas.whenReady().then(() => atlas);

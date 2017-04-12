@@ -20,6 +20,7 @@ import {
 
 declare var dat: any;
 const gui = new dat.GUI();
+gui.close();
 
 type Marker = DrawMarker & GeneralizeMarker & {
     mapPoint: [number, number],
@@ -43,7 +44,7 @@ const priorityGroups: PriorityGroup[] = [{
     degradation: 0,
 }];
 
-const map = DG.map('map', {
+const map = window['map'] = DG.map('map', {
     center: [55.75088330688495, 37.62062072753907],
     zoom: 11,
 });
@@ -52,8 +53,6 @@ Promise.all([
     loadAtlas(),
     loadMarkersData(),
 ]).then(([atlas, markersData]) => {
-    window['map'] = map;
-
     // const markersData: any[] = [
     //     { lon: 38.016845703125, lat: 55.624744415283, is_advertising: false },
     //     { lon: 38.057151794434, lat: 55.630252838135, is_advertising: false },
@@ -89,7 +88,16 @@ Promise.all([
         maxY: size.y * retinaFactor * 1.5,
     };
 
-    let markerDrawer;
+    const markerDrawer = new MarkerDrawer(atlas);
+    markerDrawer.on('click', (ev: any) => {
+        ev.markers.forEach((index) => {
+            const marker = markers[index];
+            // tslint:disable-next-line
+            console.log('click', `{ lon: ${marker.position[0]}, lat: ${marker.position[1]} }`, marker);
+        });
+    });
+    markerDrawer.addTo(map);
+
     let resetLastGroupIndex = false;
 
     const general = new General();
@@ -142,6 +150,7 @@ Promise.all([
             console.timeEnd('gen');
 
             const drawingOffsets = config.groups.some((g) => g.drawingOffsets);
+            markerDrawer.setDebugDrawing(drawingOffsets);
 
             if (drawingOffsets) {
                 for (let i = 0; i < markers.length; i++) {
@@ -164,28 +173,18 @@ Promise.all([
                 }
             }
 
-            if (markerDrawer) {
-                markerDrawer.remove();
-            }
+            markerDrawer.setMarkers(markers);
 
-            markerDrawer = new MarkerDrawer(markers, atlas, {
-                debugDrawing: drawingOffsets,
-            });
-            markerDrawer.on('click', (ev) => {
-                ev.markers.forEach((index) => {
-                    const marker = markers[index];
-                    // tslint:disable-next-line
-                    console.log('click', `{ lon: ${marker.position[0]}, lat: ${marker.position[1]} }`, marker);
-                });
-            });
-            markerDrawer.addTo(map);
             // tslint:disable-next-line
             console.timeEnd('update');
         });
     }
 
     map.on('moveend', updateGeneralization);
-    map.on('zoomstart', () => resetLastGroupIndex = true);
+    map.on('zoomstart', () => {
+        markerDrawer.setMarkers([]);
+        resetLastGroupIndex = true;
+    });
     updateGeneralization();
 }).catch((error) => {
     // tslint:disable-next-line
