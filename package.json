@@ -14,7 +14,11 @@
     }
   ],
   "license": "BSD-2-Clause",
-  "main": "index.js",
+  "repository": {
+    "type": "git",
+    "url": "git@github.com:2gis/general.git"
+  },
+  "main": "dist/general.js",
   "scripts": {
     "start": "npm run dev",
     "test": "npm run lint",

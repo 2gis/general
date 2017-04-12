@@ -3,18 +3,20 @@
         "baseUrl": ".",
         "paths": {
         "tslib": ["./node_modules/tslib/tslib.d.ts"],
-        "*": [
-            "src/*",
-            "demo/*"
-        ]
+            "*": [
+                "src/*",
+                "demo/*"
+            ]
         },
         "target": "es5",
+        "module": "es6",
+        "moduleResolution": "node",
         "lib": ["dom", "es6"],
         "sourceMap": true,
         "noImplicitAny": false,
         "strictNullChecks": true,
-        "noEmitHelpers": true,
-        "importHelpers": true,
+        "noEmitHelpers": false,
+        "importHelpers": false,
         "noUnusedLocals": true,
         "noUnusedParameters": true,
         "declaration": true

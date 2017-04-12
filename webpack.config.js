@@ -27,7 +27,7 @@ switch (env) {
             devtool: 'source-map',
             entry: './src/index.ts',
             output: {
-                filename: 'markerdrawer.js',
+                filename: 'general.js',
                 path: path.resolve(__dirname, 'dist'),
                 publicPath: '/dist/',
                 libraryTarget: 'commonjs'
