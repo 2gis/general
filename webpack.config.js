@@ -1,7 +1,7 @@
 const webpack = require('webpack');
 const path = require('path');
 
-const env = process.env.NODE_ENV
+const env = process.env.NODE_ENV;
 const config = {
     module: {
         rules: [
@@ -30,7 +30,8 @@ switch (env) {
                 filename: 'general.js',
                 path: path.resolve(__dirname, 'dist'),
                 publicPath: '/dist/',
-                libraryTarget: 'commonjs'
+                libraryTarget: 'umd',
+                library: 'General'
             },
             plugins:[
                 new webpack.optimize.UglifyJsPlugin({
