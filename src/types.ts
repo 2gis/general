@@ -1,31 +1,28 @@
 export type Vec2 = [number, number] | Float64Array;
 
 export interface Sprite {
-    size: Vec2;
-    anchor: Vec2;
-    pixelDensity: number;
+    size: Vec2; // Размер иконки
+    anchor: Vec2; // Центр иконки относительно ее размеров, принимает занчения от 0 до 1
+    pixelDensity: number; // Плотность частиц иконки, так для иконки, предназначенной для ретины, нужно ставить 2
 }
 
 export interface Atlas {
     sprites: Sprite[];
 }
 
-export type LngLat = Vec2;
-
 export interface Marker {
-    position: LngLat;
-    pixelPosition: Vec2;
-    groupIndex: number;
+    pixelPosition: Vec2; // позиция маркера в пикселях
+    groupIndex: number; // Индекс в массиве групп, к которой маркер будет изначально принадлежать
 
     iconIndex?: number; // Индекс спрайта в атласе, добавляется в ходе генерализации
-    prevGroupIndex?: number;
+    prevGroupIndex?: number; // Параметр выставляемый после генерализации, нужен, чтобы не считать старые маркера
 }
 
 export interface PriorityGroup {
-    iconIndex: number; // Индекс спрайта в атласе
+    iconIndex: number; // Индекс иконки в атласе, которая будет установлена маркеру, попавшему в эту группу
     safeZone: number; // Отступ чтобы встать
     margin: number; // Отступ после того как встал
-    degradation: number; // Отступ для области в которой все остальные маркера будут деградировать
+    degradation: number; // Отступ для области в которой все остальные маркера будут деградировать в следующую группу
 }
 
 export interface BBox {
