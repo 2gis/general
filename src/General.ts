@@ -59,7 +59,7 @@ export class General {
     }
 
     private pack(markers: Marker[]): Float32Array {
-        if (markers.length > this.markerArray.length) {
+        if (markers.length * stride > this.markerArray.length) {
             this.markerArray = new Float32Array(markers.length * stride);
         }
 
