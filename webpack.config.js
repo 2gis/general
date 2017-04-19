@@ -24,7 +24,7 @@ const config = {
 switch (env) {
     case 'production':
         Object.assign(config, {
-            devtool: 'source-map',
+            devtool: '#inline-source-map',
             entry: './src/index.ts',
             output: {
                 filename: 'general.js',
