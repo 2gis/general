@@ -32,7 +32,7 @@
     "@types/leaflet": "^1.0.56",
     "@types/node": "^7.0.12",
     "@types/rbush": "^2.0.2",
-    "markerdrawer": "https://github.com/2gis/markerdrawer.git#f04bfc41fad55f6f218a23ada6776b516c43477d",
+    "markerdrawer": "https://github.com/2gis/markerdrawer.git#487c0858db156120a226430ecc18a276dc857db7",
     "rbush": "^2.0.1",
     "ts-loader": "^2.0.3",
     "tslib": "^1.6.0",
