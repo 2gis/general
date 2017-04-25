@@ -58,6 +58,9 @@ export class General {
         this.queue = [];
     }
 
+    /**
+     * Запаковывает переданный массив маркеров в типизированный массив для быстрой передачи в воркер
+     */
     private pack(markers: Marker[]): Float32Array {
         if (markers.length * stride > this.markerArray.length) {
             this.markerArray = new Float32Array(markers.length * stride);
@@ -100,6 +103,9 @@ export class General {
         this.currentJob = job;
     }
 
+    /**
+     * Вынимает значения из запакованного типизированного массива в массив маркеров
+     */
     private recordResult(markers: Marker[], workerMessage: Float32Array) {
         for (let i = 0, markerOffset = 0; i < markers.length; i++, markerOffset = markerOffset + stride) {
             const iconIndex = workerMessage[markerOffset + offsets.iconIndex];

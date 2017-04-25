@@ -21,20 +21,25 @@
   "main": "dist/general.js",
   "scripts": {
     "start": "npm run dev",
-    "test": "npm run lint",
+    "test": "npm run lint && npm run unit",
     "dev": "webpack-dev-server",
     "build": "NODE_ENV=production webpack",
     "builddemo": "NODE_ENV=demo webpack",
-    "lint": "tslint src/**/*.ts demo/**/*.ts"
+    "unit": "TS_NODE_COMPILER_OPTIONS='{\"module\":\"commonjs\"}' mocha --compilers ts:ts-node/register test/**/*.spec.ts",
+    "unit-dev": "TS_NODE_COMPILER_OPTIONS='{\"module\":\"commonjs\"}' mocha -w --compilers ts:ts-node/register test/**/*.spec.ts",
+    "lint": "tslint src/**/*.ts demo/**/*.ts test/**/*.ts"
   },
   "devDependencies": {
     "2gis-maps": "^3.2.0",
     "@2gis/markerdrawer": "^0.0.1",
     "@types/leaflet": "^1.0.56",
+    "@types/mocha": "^2.2.41",
     "@types/node": "^7.0.12",
     "@types/rbush": "^2.0.2",
+    "mocha": "^3.3.0",
     "rbush": "^2.0.1",
     "ts-loader": "^2.0.3",
+    "ts-node": "^3.0.2",
     "tslib": "^1.6.0",
     "tslint": "^4.5.1",
     "tslint-eslint-rules": "^3.5.1",
