@@ -10,7 +10,7 @@ import {
 import {
     MarkerDrawer,
     Marker as DrawMarker,
-} from 'markerdrawer';
+} from '@2gis/markerdrawer';
 import {
     BBox,
     General,

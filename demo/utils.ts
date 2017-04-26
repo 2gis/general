@@ -1,4 +1,4 @@
-import { Atlas } from 'markerdrawer';
+import { Atlas } from '@2gis/markerdrawer';
 
 const R = 6378137;
 const MAX_LATITUDE = 85.0511287798;
