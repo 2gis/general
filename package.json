@@ -1,5 +1,5 @@
 {
-  "name": "general",
+  "name": "@2gis/general",
   "version": "0.0.1",
   "description": "Fast marker generalization algorithm",
   "contributors": [
