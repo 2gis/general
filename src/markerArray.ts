@@ -1,13 +1,10 @@
-const members = [
-    'pixelPositionX',
-    'pixelPositionY',
-    'groupIndex',
-    'iconIndex',
-    'prevGroupIndex',
-];
+// Оффсеты должны быть пронумерованы по порядку
+export const offsets = {
+    pixelPositionX: 0,
+    pixelPositionY: 1,
+    groupIndex: 2,
+    iconIndex: 3,
+    prevGroupIndex: 4,
+};
 
-export const stride = members.length;
-export const offsets: {[key: string]: number} = members.reduce((offsets, member, index) => {
-    offsets[member] = index;
-    return offsets;
-}, {});
+export const stride = Object.keys(offsets).length;
