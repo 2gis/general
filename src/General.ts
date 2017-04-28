@@ -6,17 +6,23 @@ import {
     Marker,
     WorkerMessage,
     Job,
+    JobMessage,
 } from './types';
 
 const Worker = require('worker-loader?inline&fallback=false!ts-loader!./worker');
 
 export class General {
-    private worker = new Worker();
-    private queue: Job[] = [];
-    private currentJob: Job | undefined = undefined;
-    private markerArray = new Float32Array(1000 * stride);
+    private worker: Worker;
+    private queue: Job[];
+    private currentJob: Job | undefined;
+    private markerArray: Float32Array;
 
     constructor() {
+        this.worker = new Worker();
+        this.queue = [];
+        this.currentJob = undefined;
+        this.markerArray = new Float32Array(1000 * stride);
+
         this.worker.onmessage = (event) => {
             if (this.currentJob === undefined) {
                 return;
@@ -39,13 +45,11 @@ export class General {
         atlas: Atlas,
         markers: Marker[],
     ): Promise<{}> {
-        const message: WorkerMessage = {
+        const message: JobMessage = {
             bounds,
             pixelRatio,
             priorityGroups,
-            markerCount: markers.length,
             sprites: atlas.sprites,
-            markers: this.pack(markers),
         };
 
         return new Promise((resolve) => {
@@ -61,7 +65,7 @@ export class General {
     /**
      * Запаковывает переданный массив маркеров в типизированный массив для быстрой передачи в воркер
      */
-    private pack(markers: Marker[]): Float32Array {
+    private pack(markers: Marker[]) {
         if (markers.length * stride > this.markerArray.length) {
             this.markerArray = new Float32Array(markers.length * stride);
         }
@@ -82,8 +86,6 @@ export class General {
             markerArray[markerOffset + offsets.prevGroupIndex] =
                 prevGroupIndex !== undefined ? prevGroupIndex : NaN;
         }
-
-        return markerArray;
     }
 
     private dequeue() {
@@ -97,7 +99,12 @@ export class General {
             return;
         }
 
-        const message = job.message;
+        this.pack(job.markers);
+
+        let message = job.message as WorkerMessage;
+        message.markers = this.markerArray;
+        message.markerCount = job.markers.length;
+
         this.worker.postMessage(message, [message.markers.buffer]);
 
         this.currentJob = job;

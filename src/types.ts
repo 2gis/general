@@ -32,6 +32,13 @@ export interface BBox {
     maxY: number;
 }
 
+export interface JobMessage {
+    bounds: BBox;
+    pixelRatio: number;
+    priorityGroups: PriorityGroup[];
+    sprites: Sprite[];
+}
+
 export interface WorkerMessage {
     bounds: BBox;
     pixelRatio: number;
@@ -42,7 +49,7 @@ export interface WorkerMessage {
 }
 
 export interface Job {
-    message: WorkerMessage;
+    message: JobMessage;
     markers: Marker[];
     resolve: () => void;
 }
