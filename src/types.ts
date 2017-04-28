@@ -1,4 +1,4 @@
-export type Vec2 = [number, number] | Float64Array;
+export type Vec2 = [number, number] | Float64Array | number[];
 
 export interface Sprite {
     size: Vec2; // Размер иконки

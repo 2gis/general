@@ -1,14 +1,11 @@
-import { BBox, Vec2, WorkerMessage } from './types';
-import { stride, offsets } from './markerArray';
-
-declare const postMessage: (message: any, transfer?: any[]) => void;
+import { BBox, Vec2, WorkerMessage } from '../types';
+import { stride, offsets } from '../markerArray';
 
 const collideBBox: BBox = { minX: 0, minY: 0, maxX: 0, maxY: 0 };
 const marginBBox: BBox = { minX: 0, minY: 0, maxX: 0, maxY: 0 };
 const degradationBBox: BBox = { minX: 0, minY: 0, maxX: 0, maxY: 0 };
 
-onmessage = (event) => {
-    const data: WorkerMessage = event.data;
+export function generalize(data: WorkerMessage) {
     const { bounds, pixelRatio, priorityGroups, sprites, markers, markerCount } = data;
 
     const width = (bounds.maxX - bounds.minX >> 3) + 1 << 3; // Ширина должна быть кратна 8
@@ -143,8 +140,6 @@ onmessage = (event) => {
             }
         }
     }
-
-    postMessage(markers);
 };
 
 /**
@@ -255,3 +250,11 @@ function createBBox(
     dst.maxX = x2 > 0 ? (x2 < width ? x2 : width) : 0;
     dst.maxY = y2 > 0 ? (y2 < height ? y2 : height) : 0;
 }
+
+export const testHandlers = {
+    collide,
+    putToArray,
+    isNaN,
+    bboxIsEmpty,
+    createBBox,
+};
