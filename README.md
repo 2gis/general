@@ -65,9 +65,9 @@ _Слева параметр margin равен 0, справа – 40_
 _Слева параметр degradation равен 0, справа - 40_
 
 ## Установка ##
-Собранные версии библиотеки лежат в репозитории в ветке [build](https://github.com/2gis/general/tree/build):
+С помощью `npm`:
 ```bash
-npm install https://github.com/2gis/general.git#build
+npm install @2gis/general
 ```
 Можно подключить через `script` использовать через глобальную переменную `General`:
 ```html
