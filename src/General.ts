@@ -101,7 +101,7 @@ export class General {
 
         this.pack(job.markers);
 
-        let message = job.message as WorkerMessage;
+        const message = job.message as WorkerMessage;
         message.markers = this.markerArray;
         message.markerCount = job.markers.length;
 
@@ -123,5 +123,5 @@ export class General {
             markers[i].prevGroupIndex =
                 prevGroupIndex !== prevGroupIndex ? undefined : prevGroupIndex;
         }
-    };
+    }
 }

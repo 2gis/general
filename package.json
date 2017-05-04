@@ -27,7 +27,7 @@
     "builddemo": "NODE_ENV=demo webpack",
     "unit": "TS_NODE_COMPILER_OPTIONS='{\"module\":\"commonjs\"}' mocha --compilers ts:ts-node/register test/**/*.spec.ts",
     "unit-dev": "TS_NODE_COMPILER_OPTIONS='{\"module\":\"commonjs\"}' mocha -w --compilers ts:ts-node/register test/**/*.spec.ts",
-    "lint": "tslint src/**/*.ts demo/**/*.ts test/**/*.ts"
+    "lint": "tslint 'src/**/*.ts' 'demo/**/*.ts' 'test/**/*.ts'"
   },
   "devDependencies": {
     "2gis-maps": "^3.2.0",
