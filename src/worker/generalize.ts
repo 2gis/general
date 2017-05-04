@@ -140,7 +140,7 @@ export function generalize(data: WorkerMessage) {
             }
         }
     }
-};
+}
 
 /**
  * Проверяет, пересекает ли область что-либо в плоскости
