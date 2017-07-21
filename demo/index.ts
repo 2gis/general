@@ -88,13 +88,12 @@ Promise.all([
         maxY: size.y * retinaFactor * 1.5,
     };
 
-    const markerDrawer = new MarkerDrawer(atlas);
+    const markerDrawer = new MarkerDrawer();
+    markerDrawer.setAtlas(atlas);
     markerDrawer.on('click', (ev: any) => {
-        ev.markers.forEach((index) => {
-            const marker = markers[index];
-            // tslint:disable-next-line
-            console.log('click', `{ lon: ${marker.position[0]}, lat: ${marker.position[1]} }`, marker);
-        });
+        const marker = markers[ev.marker];
+        // tslint:disable-next-line
+        console.log('click', `{ lon: ${marker.position[0]}, lat: ${marker.position[1]} }`, marker);
     });
     markerDrawer.addTo(map);
 

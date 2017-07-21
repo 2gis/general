@@ -8,8 +8,7 @@ import {
     Job,
     JobMessage,
 } from './types';
-
-const Worker = require('worker-loader?inline&fallback=false!ts-loader!./worker');
+import work from 'webworkify-webpack';
 
 export class General {
     private worker: Worker;
@@ -18,7 +17,7 @@ export class General {
     private markerArray: Float32Array;
 
     constructor() {
-        this.worker = new Worker();
+        this.worker = work(require.resolve('./worker'));
         this.queue = [];
         this.currentJob = undefined;
         this.markerArray = new Float32Array(1000 * stride);

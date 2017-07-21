@@ -30,22 +30,22 @@
     "lint": "tslint 'src/**/*.ts' 'demo/**/*.ts' 'test/**/*.ts'"
   },
   "devDependencies": {
-    "2gis-maps": "^3.2.0",
-    "@2gis/markerdrawer": "^0.0.2",
-    "@types/leaflet": "^1.0.56",
+    "2gis-maps": "^3.3.5",
+    "@2gis/markerdrawer": "^0.0.9",
+    "@types/leaflet": "^1.0.66",
     "@types/mocha": "^2.2.41",
-    "@types/node": "^7.0.12",
+    "@types/node": "^8.0.14",
     "@types/rbush": "^2.0.2",
-    "mocha": "^3.3.0",
+    "mocha": "^3.4.2",
     "rbush": "^2.0.1",
-    "ts-loader": "^2.0.3",
-    "ts-node": "^3.0.2",
-    "tslib": "^1.6.0",
-    "tslint": "^5.2.0",
-    "tslint-eslint-rules": "^4.0.0",
-    "typescript": "^2.2.1",
-    "webpack": "^2.3.1",
-    "webpack-dev-server": "^2.4.2",
-    "worker-loader": "^0.8.0"
+    "ts-loader": "^2.3.1",
+    "ts-node": "^3.2.1",
+    "tslib": "^1.7.1",
+    "tslint": "^5.5.0",
+    "tslint-eslint-rules": "^4.1.1",
+    "typescript": "^2.4.2",
+    "webpack": "^3.3.0",
+    "webpack-dev-server": "^2.5.1",
+    "webworkify-webpack": "^2.0.5"
   }
 }
