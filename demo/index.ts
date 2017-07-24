@@ -1,3 +1,4 @@
+import 'whatwg-fetch';
 import * as DG from '2gis-maps';
 import {
     loadAtlas,
