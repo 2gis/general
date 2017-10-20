@@ -41,14 +41,14 @@ export class General {
         bounds: BBox,
         pixelRatio: number,
         priorityGroups: PriorityGroup[],
-        atlas: Sprite[],
+        sprites: Sprite[],
         markers: Marker[],
     ): Promise<{}> {
         const message: JobMessage = {
             bounds,
             pixelRatio,
             priorityGroups,
-            sprites: atlas,
+            sprites,
         };
 
         return new Promise((resolve) => {
