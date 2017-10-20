@@ -6,8 +6,6 @@ export interface Sprite {
     pixelDensity: number; // Плотность частиц иконки, так для иконки, предназначенной для ретины, нужно ставить 2
 }
 
-export type Atlas = Sprite[];
-
 export interface Marker {
     pixelPosition: Vec2; // позиция маркера в пикселях
     groupIndex: number; // Индекс в массиве групп, к которой маркер будет изначально принадлежать

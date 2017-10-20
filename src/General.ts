@@ -2,7 +2,7 @@ import { stride, offsets } from './markerArray';
 import {
     BBox,
     PriorityGroup,
-    Atlas,
+    Sprite,
     Marker,
     WorkerMessage,
     Job,
@@ -41,7 +41,7 @@ export class General {
         bounds: BBox,
         pixelRatio: number,
         priorityGroups: PriorityGroup[],
-        atlas: Atlas,
+        atlas: Sprite[],
         markers: Marker[],
     ): Promise<{}> {
         const message: JobMessage = {
