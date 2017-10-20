@@ -48,7 +48,7 @@ export class General {
             bounds,
             pixelRatio,
             priorityGroups,
-            sprites: atlas.sprites,
+            sprites: atlas,
         };
 
         return new Promise((resolve) => {

@@ -145,7 +145,7 @@ Promise.all([
 
         // tslint:disable-next-line
         console.time('gen');
-        general.generalize(bounds, retinaFactor, priorityGroups, atlas, markers).then(() => {
+        general.generalize(bounds, retinaFactor, priorityGroups, atlas.sprites, markers).then(() => {
             // tslint:disable-next-line
             console.timeEnd('gen');
 
