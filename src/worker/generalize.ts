@@ -45,9 +45,11 @@ export function generalize(data: WorkerMessage) {
 
     // Поэтому вначале закрашиваем плоскость повторно генерализуемыми маркерами
     for (let i = 0; i < markerCount; i++) {
-        const prevGroupIndex = markers[i * stride + offsets.prevGroupIndex];
-        const pixelPositionX = markers[i * stride + offsets.pixelPositionX];
-        const pixelPositionY = markers[i * stride + offsets.pixelPositionY];
+        const markerOffset = i * stride;
+
+        const prevGroupIndex = markers[markerOffset + offsets.prevGroupIndex];
+        const pixelPositionX = markers[markerOffset + offsets.pixelPositionX];
+        const pixelPositionY = markers[markerOffset + offsets.pixelPositionY];
 
         // prevGroupIndex не равен NaN, если маркер уже проходил генерализацию
         if (!isNaN(prevGroupIndex)) {
@@ -61,7 +63,17 @@ export function generalize(data: WorkerMessage) {
 
             const { size, anchor, pixelDensity } = sprite;
 
-            // Вставляем их на основную плоскость и плоскость деградции без всяких проверок
+            // Проверяем, попадает ли иконка маркера в новые границы
+            createBBox(collideBBox, width, height, pixelRatio, size, anchor, pixelDensity,
+                pixelPositionX, pixelPositionY, margin);
+
+            if (bboxIsEmpty(collideBBox)) {
+                markers[markerOffset + offsets.iconIndex] = -1;
+            } else {
+                markers[markerOffset + offsets.iconIndex] = iconIndex;
+            }
+
+            // Вставляем маркеры на основную плоскость и плоскость деградации без всяких проверок
             createBBox(marginBBox, width, height, pixelRatio, size, anchor, pixelDensity,
                 pixelPositionX, pixelPositionY, margin);
 
