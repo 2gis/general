@@ -57,15 +57,16 @@ Promise.all([
     const markers: Marker[] = [];
     for (let i = 0; i < markersData.length; i++) {
         const markerData = markersData[i];
-        const marker: any = {};
-        marker.position = [
-            markerData.lon,
-            markerData.lat,
-        ];
-        marker.groupIndex = markersData[i].is_advertising ? 0 : 1;
-        marker.mapPoint = latLngToMapPoint(marker.position);
-        marker.iconIndex = -1;
-        marker.data = markerData;
+        const position: [number, number] = [markerData.lon, markerData.lat];
+        const mapPoint = latLngToMapPoint(position);
+        const marker: Marker = {
+            position,
+            groupIndex: markersData[i].is_advertising ? 0 : 1,
+            mapPoint,
+            iconIndex: -1,
+            data: markerData,
+            pixelPosition: mapPointToZoomPoint(mapPoint, map.getZoom()),
+        };
         markers.push(marker);
     }
 
@@ -75,12 +76,7 @@ Promise.all([
 
     const retinaFactor = window.devicePixelRatio;
     const size = map.getSize();
-    const bounds: BBox = {
-        minX: -size.x * retinaFactor / 2,
-        minY: -size.y * retinaFactor / 2,
-        maxX: size.x * retinaFactor * 1.5,
-        maxY: size.y * retinaFactor * 1.5,
-    };
+    let bounds: BBox = { minX: 0, minY: 0, maxX: 0, maxY: 0 };
 
     const markerDrawer = new MarkerDrawer();
     markerDrawer.setAtlas(atlas);
@@ -91,7 +87,7 @@ Promise.all([
     });
     markerDrawer.addTo(map);
 
-    let resetLastGroupIndex = false;
+    let zoomChanged = false;
     let generalizationIsBusy = false;
     let generalizetionNeedUpdate = false;
 
@@ -99,7 +95,7 @@ Promise.all([
 
     // dat gui
     const datGuiOnchange = () => {
-        resetLastGroupIndex = true;
+        zoomChanged = true;
         updateGeneralization();
     };
     priorityGroups.forEach((group, i) => {
@@ -127,21 +123,22 @@ Promise.all([
         const center = map.getCenter();
         const zoom = map.getZoom();
         const pixelCenter = lngLatToZoomPoint([center.lng, center.lat], zoom);
-        const topLeft = [pixelCenter[0] - size.x, pixelCenter[1] - size.y];
 
-        for (let i = 0; i < markers.length; i++) {
-            const marker = markers[i];
-            const point = mapPointToZoomPoint(marker.mapPoint, zoom);
-            marker.pixelPosition = [point[0] - topLeft[0], point[1] - topLeft[1]];
-        }
+        bounds = {
+            minX: pixelCenter[0] - 1.5 * size.x * retinaFactor,
+            minY: pixelCenter[1] - 1.5 * size.y * retinaFactor,
+            maxX: pixelCenter[0] + 1.5 * size.x * retinaFactor,
+            maxY: pixelCenter[1] + 1.5 * size.y * retinaFactor,
+        };
 
-        if (resetLastGroupIndex) {
+        if (zoomChanged) {
             for (let i = 0; i < markers.length; i++) {
                 const marker = markers[i];
                 marker.prevGroupIndex = undefined;
                 marker.iconIndex = -1;
+                marker.pixelPosition = mapPointToZoomPoint(marker.mapPoint, zoom);
             }
-            resetLastGroupIndex = false;
+            zoomChanged = false;
         }
 
         // tslint:disable-next-line
@@ -190,7 +187,7 @@ Promise.all([
     map.on('moveend', updateGeneralization);
     map.on('zoomstart', () => {
         markerDrawer.setMarkers([]);
-        resetLastGroupIndex = true;
+        zoomChanged = true;
     });
     updateGeneralization();
 }).catch((error) => {
