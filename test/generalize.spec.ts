@@ -1,7 +1,8 @@
-import { ok, deepEqual } from 'assert';
-import { BBox } from '../src/types';
+import { ok, equal, deepEqual } from 'assert';
+import { BBox, Marker, WorkerMessage } from '../src/types';
 
 import { testHandlers } from '../src/worker/generalize';
+import { pack, stride, unpack } from '../src/markerArray';
 
 const {
     putToArray,
@@ -9,6 +10,7 @@ const {
     createBBox,
     bboxIsEmpty,
     isNaN,
+    generalize,
 } = testHandlers;
 
 describe('generalize.ts', () => {
@@ -201,6 +203,242 @@ describe('generalize.ts', () => {
 
         it('проверка с NaN', () => {
             ok(isNaN(NaN));
+        });
+    });
+
+    describe('#generalize', () => {
+        describe('two markers one group', () => {
+            let msg: WorkerMessage;
+            let markers: Marker[];
+            let markerArray: Float32Array;
+
+            beforeEach(() => {
+                markers = [{
+                    pixelPosition: [50, 50],
+                    groupIndex: 0,
+                    iconIndex: -1,
+                }, {
+                    pixelPosition: [50, 65],
+                    groupIndex: 0,
+                    iconIndex: -1,
+                }];
+
+                markerArray = new Float32Array(markers.length * stride);
+                pack(markerArray, markers);
+
+                msg = {
+                    bounds: { minX: 0, minY: 0, maxX: 100, maxY: 100 },
+                    pixelRatio: 1,
+                    priorityGroups: [{
+                        safeZone: 0,
+                        margin: 0,
+                        degradation: 0,
+                        iconIndex: 0,
+                    }],
+                    sprites: [{
+                        size: [10, 10],
+                        anchor: [0.5, 0.5],
+                        pixelDensity: 1,
+                    }],
+                    markerCount: markers.length,
+                    markers: markerArray,
+                };
+            });
+
+            it('1ый маркер встал, 2ой маркер тоже встал', () => {
+                generalize(msg);
+                unpack(markers, markerArray);
+
+                equal(markers[0].iconIndex, 0);
+                equal(markers[1].iconIndex, 0);
+            });
+
+            it('1ый маркер встал, 2ой маркер не смог встать из-за safeZone', () => {
+                msg.priorityGroups[0].safeZone = 10;
+                generalize(msg);
+                unpack(markers, markerArray);
+
+                equal(markers[0].iconIndex, 0);
+                equal(markers[1].iconIndex, -1);
+            });
+
+            it('1ый маркер встал, 2ой маркер не смог встать из-за margin', () => {
+                msg.priorityGroups[0].margin = 10;
+                generalize(msg);
+                unpack(markers, markerArray);
+
+                equal(markers[0].iconIndex, 0);
+                equal(markers[1].iconIndex, -1);
+            });
+
+            it('1ый маркер встал, 2ой маркер тоже, т.к. degradation на него не влияет', () => {
+                msg.priorityGroups[0].degradation = 10;
+                generalize(msg);
+                unpack(markers, markerArray);
+
+                equal(markers[0].iconIndex, 0);
+                equal(markers[1].iconIndex, 0);
+            });
+        });
+
+        describe('two markers three groups', () => {
+            let msg: WorkerMessage;
+            let markers: Marker[];
+            let markerArray: Float32Array;
+
+            beforeEach(() => {
+                markers = [{
+                    pixelPosition: [50, 50],
+                    groupIndex: 0,
+                    iconIndex: -1,
+                }, {
+                    pixelPosition: [50, 65],
+                    groupIndex: 1,
+                    iconIndex: -1,
+                }, {
+                    pixelPosition: [65, 65],
+                    groupIndex: 2,
+                    iconIndex: -1,
+                }];
+
+                markerArray = new Float32Array(markers.length * stride);
+                pack(markerArray, markers);
+
+                msg = {
+                    bounds: { minX: 0, minY: 0, maxX: 100, maxY: 100 },
+                    pixelRatio: 1,
+                    priorityGroups: [{
+                        safeZone: 0,
+                        margin: 0,
+                        degradation: 0,
+                        iconIndex: 0,
+                    }, {
+                        safeZone: 0,
+                        margin: 0,
+                        degradation: 0,
+                        iconIndex: 1,
+                    }, {
+                        safeZone: 0,
+                        margin: 0,
+                        degradation: 0,
+                        iconIndex: 2,
+                    }],
+                    sprites: [{
+                        size: [10, 10],
+                        anchor: [0.5, 0.5],
+                        pixelDensity: 1,
+                    }, {
+                        size: [6, 6],
+                        anchor: [0.5, 0.5],
+                        pixelDensity: 1,
+                    }, {
+                        size: [2, 2],
+                        anchor: [0.5, 0.5],
+                        pixelDensity: 1,
+                    }],
+                    markerCount: markers.length,
+                    markers: markerArray,
+                };
+            });
+
+            it('1ый маркер встал, 2ой маркер деградировал в 3ю группу из-за своей safeZone', () => {
+                msg.priorityGroups[1].safeZone = 10;
+                generalize(msg);
+                unpack(markers, markerArray);
+
+                equal(markers[0].iconIndex, 0);
+                equal(markers[1].iconIndex, 2);
+            });
+
+            it('1ый маркер встал, 2ой маркер пропал из-за margin 1ой', () => {
+                msg.priorityGroups[1].margin = 10;
+                generalize(msg);
+                unpack(markers, markerArray);
+
+                equal(markers[0].iconIndex, 0);
+                equal(markers[1].iconIndex, 2);
+            });
+
+            it('1ый маркер встал, 2ой маркер деградировал в 3ю группу из-за degradation 1ой', () => {
+                msg.priorityGroups[0].degradation = 10;
+                generalize(msg);
+                unpack(markers, markerArray);
+
+                equal(markers[0].iconIndex, 0);
+                equal(markers[1].iconIndex, 2);
+            });
+        });
+
+        it('маркер повторно проходящий генерализацию, ' +
+            'но не попадающий в переданные границы, должен иметь iconIndex = -1',
+        () => {
+            const markers: Marker[] = [{
+                pixelPosition: [50, 50],
+                groupIndex: 0,
+                iconIndex: 0,
+                prevGroupIndex: 0,
+            }];
+            const markerArray = new Float32Array(markers.length * stride);
+            pack(markerArray, markers);
+
+            const msg: WorkerMessage = {
+                bounds: { minX: 100, minY: 100, maxX: 200, maxY: 200 },
+                pixelRatio: 1,
+                priorityGroups: [{
+                    safeZone: 10,
+                    margin: 10,
+                    degradation: 0,
+                    iconIndex: 0,
+                }],
+                sprites: [{
+                    size: [10, 10],
+                    anchor: [0.5, 0.5],
+                    pixelDensity: 1,
+                }],
+                markerCount: markers.length,
+                markers: markerArray,
+            };
+
+            generalize(msg);
+            unpack(markers, markerArray);
+
+            equal(markers[0].iconIndex, -1);
+        });
+
+        it('маркер третий раз проходящий генерализацию, во второй раз он не попал в границы и получил iconIndex = -1,' +
+            'в третий раз он попадает в границы и должен получить iconIndex от группы',
+        () => {
+            const markers: Marker[] = [{
+                pixelPosition: [50, 50],
+                groupIndex: 0,
+                iconIndex: -1,
+                prevGroupIndex: 0,
+            }];
+            const markerArray = new Float32Array(markers.length * stride);
+            pack(markerArray, markers);
+
+            const msg: WorkerMessage = {
+                bounds: { minX: 0, minY: 0, maxX: 100, maxY: 100 },
+                pixelRatio: 1,
+                priorityGroups: [{
+                    safeZone: 10,
+                    margin: 10,
+                    degradation: 0,
+                    iconIndex: 0,
+                }],
+                sprites: [{
+                    size: [10, 10],
+                    anchor: [0.5, 0.5],
+                    pixelDensity: 1,
+                }],
+                markerCount: markers.length,
+                markers: markerArray,
+            };
+
+            generalize(msg);
+            unpack(markers, markerArray);
+
+            equal(markers[0].iconIndex, 0);
         });
     });
 });

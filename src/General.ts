@@ -1,4 +1,4 @@
-import { stride, offsets } from './markerArray';
+import { stride, pack, unpack } from './markerArray';
 import {
     BBox,
     PriorityGroup,
@@ -28,7 +28,7 @@ export class General {
             }
 
             const { markers, resolve } = this.currentJob;
-            this.recordResult(markers, event.data);
+            unpack(markers, event.data);
             this.markerArray = event.data;
             this.currentJob = undefined;
 
@@ -61,30 +61,12 @@ export class General {
         this.queue = [];
     }
 
-    /**
-     * Запаковывает переданный массив маркеров в типизированный массив для быстрой передачи в воркер
-     */
     private pack(markers: Marker[]) {
         if (markers.length * stride > this.markerArray.length) {
             this.markerArray = new Float32Array(markers.length * stride);
         }
 
-        const markerArray = this.markerArray;
-
-        for (let i = 0, markerOffset = 0; i < markers.length; i++, markerOffset = markerOffset + stride) {
-            const marker = markers[i];
-
-            const iconIndex = marker.iconIndex;
-            const prevGroupIndex = marker.prevGroupIndex;
-
-            this.markerArray[markerOffset + offsets.pixelPositionX] = marker.pixelPosition[0];
-            this.markerArray[markerOffset + offsets.pixelPositionY] = marker.pixelPosition[1];
-            markerArray[markerOffset + offsets.groupIndex] = marker.groupIndex;
-            markerArray[markerOffset + offsets.iconIndex] =
-                iconIndex !== undefined ? iconIndex : NaN;
-            markerArray[markerOffset + offsets.prevGroupIndex] =
-                prevGroupIndex !== undefined ? prevGroupIndex : NaN;
-        }
+        pack(this.markerArray, markers);
     }
 
     private dequeue() {
@@ -107,20 +89,5 @@ export class General {
         this.worker.postMessage(message, [message.markers.buffer]);
 
         this.currentJob = job;
-    }
-
-    /**
-     * Вынимает значения из запакованного типизированного массива в массив маркеров
-     */
-    private recordResult(markers: Marker[], workerMessage: Float32Array) {
-        for (let i = 0, markerOffset = 0; i < markers.length; i++, markerOffset = markerOffset + stride) {
-            const iconIndex = workerMessage[markerOffset + offsets.iconIndex];
-            const prevGroupIndex = workerMessage[markerOffset + offsets.prevGroupIndex];
-
-            markers[i].iconIndex =
-                iconIndex !== iconIndex ? undefined : iconIndex;
-            markers[i].prevGroupIndex =
-                prevGroupIndex !== prevGroupIndex ? undefined : prevGroupIndex;
-        }
     }
 }

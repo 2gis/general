@@ -54,13 +54,6 @@ Promise.all([
     loadAtlas(),
     loadMarkersData(),
 ]).then(([atlas, markersData]) => {
-    // const markersData: any[] = [
-    //     { lon: 38.016845703125, lat: 55.624744415283, is_advertising: false },
-    //     { lon: 38.057151794434, lat: 55.630252838135, is_advertising: false },
-    //     { lon: 38.029899597168, lat: 55.624053955078, is_advertising: false },
-    //     { lon: 38.040855407715, lat: 55.628795623779, is_advertising: false },
-    // ];
-
     const markers: Marker[] = [];
     for (let i = 0; i < markersData.length; i++) {
         const markerData = markersData[i];
@@ -99,6 +92,8 @@ Promise.all([
     markerDrawer.addTo(map);
 
     let resetLastGroupIndex = false;
+    let generalizationIsBusy = false;
+    let generalizetionNeedUpdate = false;
 
     const general = new General();
 
@@ -121,8 +116,14 @@ Promise.all([
     });
 
     function updateGeneralization() {
+        if (generalizationIsBusy) {
+            generalizetionNeedUpdate = true;
+            return;
+        }
+
         // tslint:disable-next-line
         console.time('update');
+        generalizationIsBusy = true;
         const center = map.getCenter();
         const zoom = map.getZoom();
         const pixelCenter = lngLatToZoomPoint([center.lng, center.lat], zoom);
@@ -148,6 +149,7 @@ Promise.all([
         general.generalize(bounds, retinaFactor, priorityGroups, atlas.sprites, markers).then(() => {
             // tslint:disable-next-line
             console.timeEnd('gen');
+            generalizationIsBusy = false;
 
             const drawingOffsets = config.groups.some((g) => g.drawingOffsets);
             markerDrawer.setDebugDrawing(drawingOffsets);
@@ -177,6 +179,11 @@ Promise.all([
 
             // tslint:disable-next-line
             console.timeEnd('update');
+
+            if (generalizetionNeedUpdate) {
+                updateGeneralization();
+                generalizetionNeedUpdate = false;
+            }
         });
     }
 
