@@ -1,13 +1,12 @@
-import { generalize } from '../src/worker/generalize';
-import { pack, stride } from '../src/markerArray';
-import { Marker } from '../src';
-import { latLngToMapPoint, mapPointToZoomPoint, lngLatToZoomPoint, getMean, getDeviation } from './utils';
+const { generalize } = require('./dist/generalize');
+const { pack, stride } = require('./dist/markerArray');
+const { latLngToMapPoint, mapPointToZoomPoint, lngLatToZoomPoint, getMean, getDeviation } = require('./utils');
 
-interface ApiMarker {
-    lon: number;
-    lat: number;
-    is_advertising: boolean;
-}
+// interface ApiMarker {
+//     lon: number;
+//     lat: number;
+//     is_advertising: boolean;
+// }
 
 function now() {
     const hrtime = process.hrtime();
@@ -16,7 +15,7 @@ function now() {
 
 const search1 = require('../demo/search1.json');
 const search2 = require('../demo/search1.json');
-const markersData: ApiMarker[] = [
+const markersData = [
     ...search1.result.items,
     ...search2.result.items,
 ];
@@ -59,11 +58,11 @@ const zoom = 11;
 const size = [1920, 1024];
 const retinaFactor = 1;
 
-const markers: Marker[] = [];
+const markers = [];
 for (let i = 0; i < markersData.length; i++) {
     const markerData = markersData[i];
     const mapPoint = latLngToMapPoint([markerData.lon, markerData.lat]);
-    const marker: Marker = {
+    const marker = {
         groupIndex: markersData[i].is_advertising ? 0 : 1,
         iconIndex: -1,
         pixelPosition: mapPointToZoomPoint(mapPoint, zoom),
@@ -81,7 +80,7 @@ const bounds = {
 
 const markerArray = new Float32Array(markers.length * stride);
 
-const times: number[] = [];
+const times = [];
 
 const count = 1000;
 const warmupCount = 10;

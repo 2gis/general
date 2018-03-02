@@ -28,7 +28,8 @@
     "unit": "TS_NODE_COMPILER_OPTIONS='{\"module\":\"commonjs\"}' mocha --compilers ts:ts-node/register test/**/*.spec.ts",
     "unit-dev": "TS_NODE_COMPILER_OPTIONS='{\"module\":\"commonjs\"}' mocha -w --compilers ts:ts-node/register test/**/*.spec.ts",
     "lint": "tslint 'src/**/*.ts' 'demo/**/*.ts' 'test/**/*.ts'",
-    "bench": "ts-node -O '{\"module\":\"commonjs\"}' benchmark/index.ts"
+    "bench": "node benchmark/index.ts",
+    "buildbench": "webpack --config=benchmark/webpack.config.js"
   },
   "devDependencies": {
     "2gis-maps": "^3.3.5",

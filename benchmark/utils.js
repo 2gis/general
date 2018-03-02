@@ -1,11 +1,11 @@
 const R = 6378137;
 const MAX_LATITUDE = 85.0511287798;
 
-export function lngLatToZoomPoint(lngLat: [number, number], zoom: number) {
+function lngLatToZoomPoint(lngLat, zoom) {
     return mapPointToZoomPoint(latLngToMapPoint(lngLat), zoom);
 }
 
-export function mapPointToZoomPoint(point: [number, number], zoom): [number, number] {
+function mapPointToZoomPoint(point, zoom) {
     const scale = 256 * Math.pow(2, zoom);
     const k = 0.5 / (Math.PI * R);
     return [
@@ -14,7 +14,7 @@ export function mapPointToZoomPoint(point: [number, number], zoom): [number, num
     ];
 }
 
-export function latLngToMapPoint(lngLat: [number, number]): [number, number] {
+function latLngToMapPoint(lngLat) {
     const d = Math.PI / 180;
     const lat = Math.max(Math.min(MAX_LATITUDE, lngLat[1]), -MAX_LATITUDE);
     const sin = Math.sin(lat * d);
@@ -24,7 +24,7 @@ export function latLngToMapPoint(lngLat: [number, number]): [number, number] {
     ];
 }
 
-export function getMean(sample: number[]): number {
+function getMean(sample) {
     let mean = sample[0];
 
     for (let i = 1; i < sample.length; i++) {
@@ -36,7 +36,7 @@ export function getMean(sample: number[]): number {
     return mean;
 }
 
-export function getDeviation(sample: number[]): number {
+function getDeviation(sample) {
     const mean = getMean(sample);
     let dispersion = 0;
 
@@ -46,3 +46,11 @@ export function getDeviation(sample: number[]): number {
 
     return dispersion / sample.length;
 }
+
+module.exports = {
+    lngLatToZoomPoint,
+    mapPointToZoomPoint,
+    latLngToMapPoint,
+    getMean,
+    getDeviation,
+};
