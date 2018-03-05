@@ -8,10 +8,10 @@ const degradationBBox: BBox = { minX: 0, minY: 0, maxX: 0, maxY: 0 };
 export function generalize(data: WorkerMessage) {
     const { bounds, pixelRatio, priorityGroups, sprites, markers, markerCount } = data;
 
-    const width = (bounds.maxX - bounds.minX >> 3) + 1 << 3; // Ширина должна быть кратна 8
-    const height = bounds.maxY - bounds.minY;
+    const planeWidth = (bounds.maxX - bounds.minX >> 3) + 1 << 3; // Ширина должна быть кратна 8
+    const planeHeight = bounds.maxY - bounds.minY;
 
-    const planeLength = width * height + 8 >> 3;
+    const planeLength = planeWidth * planeHeight + 8 >> 3;
 
     /**
      * Алгоритм действует по принципу закрашивания плоскости маркерами.
@@ -45,9 +45,11 @@ export function generalize(data: WorkerMessage) {
 
     // Поэтому вначале закрашиваем плоскость повторно генерализуемыми маркерами
     for (let i = 0; i < markerCount; i++) {
-        const prevGroupIndex = markers[i * stride + offsets.prevGroupIndex];
-        const pixelPositionX = markers[i * stride + offsets.pixelPositionX];
-        const pixelPositionY = markers[i * stride + offsets.pixelPositionY];
+        const markerOffset = i * stride;
+
+        const prevGroupIndex = markers[markerOffset + offsets.prevGroupIndex];
+        const pixelPositionX = markers[markerOffset + offsets.pixelPositionX] - bounds.minX;
+        const pixelPositionY = markers[markerOffset + offsets.pixelPositionY] - bounds.minY;
 
         // prevGroupIndex не равен NaN, если маркер уже проходил генерализацию
         if (!isNaN(prevGroupIndex)) {
@@ -61,19 +63,29 @@ export function generalize(data: WorkerMessage) {
 
             const { size, anchor, pixelDensity } = sprite;
 
-            // Вставляем их на основную плоскость и плоскость деградции без всяких проверок
-            createBBox(marginBBox, width, height, pixelRatio, size, anchor, pixelDensity,
+            // Проверяем, попадает ли иконка маркера в новые границы
+            createBBox(collideBBox, planeWidth, planeHeight, pixelRatio, size, anchor, pixelDensity,
+                pixelPositionX, pixelPositionY, 0);
+
+            if (bboxIsEmpty(collideBBox)) {
+                markers[markerOffset + offsets.iconIndex] = -1;
+            } else {
+                markers[markerOffset + offsets.iconIndex] = iconIndex;
+            }
+
+            // Вставляем маркеры на основную плоскость и плоскость деградации без всяких проверок
+            createBBox(marginBBox, planeWidth, planeHeight, pixelRatio, size, anchor, pixelDensity,
                 pixelPositionX, pixelPositionY, margin);
 
             if (!bboxIsEmpty(marginBBox)) {
-                putToArray(plane, width, marginBBox);
+                putToArray(plane, planeWidth, marginBBox);
             }
 
-            createBBox(degradationBBox, width, height, pixelRatio, size, anchor, pixelDensity,
+            createBBox(degradationBBox, planeWidth, planeHeight, pixelRatio, size, anchor, pixelDensity,
                 pixelPositionX, pixelPositionY, degradation);
 
             if (!bboxIsEmpty(degradationBBox)) {
-                putToArray(degradationPlane, width, degradationBBox);
+                putToArray(degradationPlane, planeWidth, degradationBBox);
             }
         }
     }
@@ -101,8 +113,8 @@ export function generalize(data: WorkerMessage) {
 
             const groupIndex = markers[markerOffset + offsets.groupIndex];
             const prevGroupIndex = markers[markerOffset + offsets.prevGroupIndex];
-            const pixelPositionX = markers[markerOffset + offsets.pixelPositionX];
-            const pixelPositionY = markers[markerOffset + offsets.pixelPositionY];
+            const pixelPositionX = markers[markerOffset + offsets.pixelPositionX] - bounds.minX;
+            const pixelPositionY = markers[markerOffset + offsets.pixelPositionY] - bounds.minY;
 
             // Пропускаем маркера, чей изначальный groupIndex больше индекса текущей перебираемой группы.
             // Такие маркера будут проверены в следующах группах.
@@ -112,28 +124,28 @@ export function generalize(data: WorkerMessage) {
             }
 
             // Маркер первый раз попал в область деградации – пропускаем
-            createBBox(marginBBox, width, height, pixelRatio, size, anchor, pixelDensity,
+            createBBox(marginBBox, planeWidth, planeHeight, pixelRatio, size, anchor, pixelDensity,
                 pixelPositionX, pixelPositionY, margin);
             if (bboxIsEmpty(marginBBox) ||
-                (groupIndex === i && collide(currentDegradationPlane, width, marginBBox))
+                (groupIndex === i && collide(currentDegradationPlane, planeWidth, marginBBox))
             ) {
                 continue;
             }
 
             // Область маркера пересекает область уже вставшего маркера – пропускаем
-            createBBox(collideBBox, width, height, pixelRatio, size, anchor, pixelDensity,
+            createBBox(collideBBox, planeWidth, planeHeight, pixelRatio, size, anchor, pixelDensity,
                 pixelPositionX, pixelPositionY, safeZone);
             if (bboxIsEmpty(collideBBox)) {
                 continue;
             }
 
-            if (!collide(plane, width, collideBBox)) {
-                createBBox(degradationBBox, width, height, pixelRatio, size, anchor, pixelDensity,
+            if (!collide(plane, planeWidth, collideBBox)) {
+                createBBox(degradationBBox, planeWidth, planeHeight, pixelRatio, size, anchor, pixelDensity,
                     pixelPositionX, pixelPositionY, degradation);
 
                 // Если все хорошо и маркер выжил, закрашиваем его в двух плоскостях
-                putToArray(plane, width, marginBBox);
-                putToArray(degradationPlane, width, degradationBBox);
+                putToArray(plane, planeWidth, marginBBox);
+                putToArray(degradationPlane, planeWidth, degradationBBox);
 
                 markers[markerOffset + offsets.iconIndex] = iconIndex;
                 markers[markerOffset + offsets.prevGroupIndex] = i;
@@ -226,8 +238,8 @@ function bboxIsEmpty(a: BBox): boolean {
 
 function createBBox(
     dst: BBox,
-    width: number,
-    height: number,
+    planeWidth: number,
+    planeHeight: number,
     pixelRatio: number,
     size: Vec2,
     anchor: Vec2,
@@ -245,10 +257,10 @@ function createBBox(
     const y2 = positionY * pixelRatio + size[1] * spriteScale * (1 - anchor[1]) + offset | 0;
 
     // Обрезаем область по установленным границам плоскости
-    dst.minX = x1 > 0 ? (x1 < width ? x1 : width) : 0;
-    dst.minY = y1 > 0 ? (y1 < height ? y1 : height) : 0;
-    dst.maxX = x2 > 0 ? (x2 < width ? x2 : width) : 0;
-    dst.maxY = y2 > 0 ? (y2 < height ? y2 : height) : 0;
+    dst.minX = x1 > 0 ? (x1 < planeWidth ? x1 : planeWidth) : 0;
+    dst.minY = y1 > 0 ? (y1 < planeHeight ? y1 : planeHeight) : 0;
+    dst.maxX = x2 > 0 ? (x2 < planeWidth ? x2 : planeWidth) : 0;
+    dst.maxY = y2 > 0 ? (y2 < planeHeight ? y2 : planeHeight) : 0;
 }
 
 export const testHandlers = {
@@ -257,4 +269,5 @@ export const testHandlers = {
     isNaN,
     bboxIsEmpty,
     createBBox,
+    generalize,
 };
