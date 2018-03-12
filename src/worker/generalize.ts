@@ -6,7 +6,7 @@ const marginBBox: BBox = { minX: 0, minY: 0, maxX: 0, maxY: 0 };
 const degradationBBox: BBox = { minX: 0, minY: 0, maxX: 0, maxY: 0 };
 
 export function generalize(data: WorkerMessage) {
-    const { bounds, pixelRatio, priorityGroups, sprites, markers, markerCount } = data;
+    const { bounds, priorityGroups, sprites, markers, markerCount } = data;
 
     const planeWidth = (bounds.maxX - bounds.minX >> 3) + 1 << 3; // Ширина должна быть кратна 8
     const planeHeight = bounds.maxY - bounds.minY;
@@ -64,10 +64,10 @@ export function generalize(data: WorkerMessage) {
                 continue;
             }
 
-            const { size, anchor, pixelDensity } = sprite;
+            const { size, anchor } = sprite;
 
             // Проверяем, попадает ли иконка маркера в новые границы
-            createBBox(collideBBox, planeWidth, planeHeight, pixelRatio, size, anchor, pixelDensity,
+            createBBox(collideBBox, planeWidth, planeHeight, size, anchor,
                 pixelPositionX, pixelPositionY, 0);
 
             if (bboxIsEmpty(collideBBox)) {
@@ -77,14 +77,14 @@ export function generalize(data: WorkerMessage) {
             }
 
             // Вставляем маркеры на основную плоскость и плоскость деградации без всяких проверок
-            createBBox(marginBBox, planeWidth, planeHeight, pixelRatio, size, anchor, pixelDensity,
+            createBBox(marginBBox, planeWidth, planeHeight, size, anchor,
                 pixelPositionX, pixelPositionY, margin);
 
             if (!bboxIsEmpty(marginBBox)) {
                 putToArray(plane, planeWidth, marginBBox);
             }
 
-            createBBox(degradationBBox, planeWidth, planeHeight, pixelRatio, size, anchor, pixelDensity,
+            createBBox(degradationBBox, planeWidth, planeHeight, size, anchor,
                 pixelPositionX, pixelPositionY, degradation);
 
             if (!bboxIsEmpty(degradationBBox)) {
@@ -105,7 +105,7 @@ export function generalize(data: WorkerMessage) {
             continue;
         }
 
-        const { size, anchor, pixelDensity } = sprite;
+        const { size, anchor } = sprite;
         const prevDegradationPlane = i !== 0 ? degradationPlanes[i - 1] : undefined;
         const degradationPlane = i !== priorityGroups.length - 1 ? degradationPlanes[i] : undefined;
 
@@ -125,8 +125,7 @@ export function generalize(data: WorkerMessage) {
             }
 
             // Маркер первый раз попал в область деградации – пропускаем
-            createBBox(marginBBox, planeWidth, planeHeight, pixelRatio, size, anchor, pixelDensity,
-                pixelPositionX, pixelPositionY, margin);
+            createBBox(marginBBox, planeWidth, planeHeight, size, anchor, pixelPositionX, pixelPositionY, margin);
             if (bboxIsEmpty(marginBBox) || (groupIndex === i &&
                     prevDegradationPlane && collide(prevDegradationPlane, planeWidth, marginBBox))
             ) {
@@ -134,14 +133,13 @@ export function generalize(data: WorkerMessage) {
             }
 
             // Область маркера пересекает область уже вставшего маркера – пропускаем
-            createBBox(collideBBox, planeWidth, planeHeight, pixelRatio, size, anchor, pixelDensity,
-                pixelPositionX, pixelPositionY, safeZone);
+            createBBox(collideBBox, planeWidth, planeHeight, size, anchor, pixelPositionX, pixelPositionY, safeZone);
             if (bboxIsEmpty(collideBBox)) {
                 continue;
             }
 
             if (!collide(plane, planeWidth, collideBBox)) {
-                createBBox(degradationBBox, planeWidth, planeHeight, pixelRatio, size, anchor, pixelDensity,
+                createBBox(degradationBBox, planeWidth, planeHeight, size, anchor,
                     pixelPositionX, pixelPositionY, degradation);
 
                 // Если все хорошо и маркер выжил, закрашиваем его в двух плоскостях
@@ -244,21 +242,17 @@ function createBBox(
     dst: BBox,
     planeWidth: number,
     planeHeight: number,
-    pixelRatio: number,
     size: Vec2,
     anchor: Vec2,
-    pixelDensity: number,
     positionX: number,
     positionY: number,
     offset: number,
 ): void {
-    const spriteScale = pixelRatio / pixelDensity;
+    const x1 = positionX - size[0] * anchor[0] - offset | 0;
+    const y1 = positionY - size[1] * anchor[1] - offset | 0;
 
-    const x1 = positionX * pixelRatio - size[0] * spriteScale * anchor[0] - offset | 0;
-    const y1 = positionY * pixelRatio - size[1] * spriteScale * anchor[1] - offset | 0;
-
-    const x2 = positionX * pixelRatio + size[0] * spriteScale * (1 - anchor[0]) + offset | 0;
-    const y2 = positionY * pixelRatio + size[1] * spriteScale * (1 - anchor[1]) + offset | 0;
+    const x2 = positionX + size[0] * (1 - anchor[0]) + offset | 0;
+    const y2 = positionY + size[1] * (1 - anchor[1]) + offset | 0;
 
     // Обрезаем область по установленным границам плоскости
     dst.minX = x1 > 0 ? (x1 < planeWidth ? x1 : planeWidth) : 0;

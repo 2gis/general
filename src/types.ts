@@ -2,8 +2,7 @@ export type Vec2 = [number, number] | Float64Array | number[];
 
 export interface Sprite {
     size: Vec2; // Размер иконки
-    anchor: Vec2; // Центр иконки относительно ее размеров, принимает занчения от 0 до 1
-    pixelDensity: number; // Плотность частиц иконки, так для иконки, предназначенной для ретины, нужно ставить 2
+    anchor: Vec2; // Центр иконки относительно ее размеров, принимает значения от 0 до 1
 }
 
 export interface Marker {
@@ -30,14 +29,12 @@ export interface BBox {
 
 export interface JobMessage {
     bounds: BBox;
-    pixelRatio: number;
     priorityGroups: PriorityGroup[];
     sprites: Sprite[];
 }
 
 export interface WorkerMessage {
     bounds: BBox;
-    pixelRatio: number;
     priorityGroups: PriorityGroup[];
     sprites: Sprite[];
     markerCount: number;

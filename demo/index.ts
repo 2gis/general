@@ -28,7 +28,7 @@ type Marker = DrawMarker & GeneralizeMarker & {
     data: ApiMarker,
 };
 
-const priorityGroups: PriorityGroup[] = [{
+const configPriorityGroups: PriorityGroup[] = [{
     iconIndex: 0,
     safeZone: 0,
     margin: 5,
@@ -54,27 +54,29 @@ Promise.all([
     loadAtlas(),
     loadMarkersData(),
 ]).then(([atlas, markersData]) => {
+    const retinaFactor = window.devicePixelRatio;
+
     const markers: Marker[] = [];
     for (let i = 0; i < markersData.length; i++) {
         const markerData = markersData[i];
         const position: [number, number] = [markerData.lon, markerData.lat];
         const mapPoint = latLngToMapPoint(position);
+        const pixelPosition = mapPointToZoomPoint(mapPoint, map.getZoom());
         const marker: Marker = {
             position,
             groupIndex: markersData[i].is_advertising ? 0 : 1,
             mapPoint,
             iconIndex: -1,
             data: markerData,
-            pixelPosition: mapPointToZoomPoint(mapPoint, map.getZoom()),
+            pixelPosition: [pixelPosition[0] * retinaFactor, pixelPosition[1] * retinaFactor],
         };
         markers.push(marker);
     }
 
     const config = {
-        groups: priorityGroups.map(() => ({ drawingOffsets: false })),
+        groups: configPriorityGroups.map(() => ({ drawingOffsets: false })),
     };
 
-    const retinaFactor = window.devicePixelRatio;
     const size = map.getSize();
     let bounds: BBox = { minX: 0, minY: 0, maxX: 0, maxY: 0 };
 
@@ -98,7 +100,7 @@ Promise.all([
         zoomChanged = true;
         updateGeneralization();
     };
-    priorityGroups.forEach((group, i) => {
+    configPriorityGroups.forEach((group, i) => {
         const folder = gui.addFolder('Group ' + i);
         const safeZone = folder.add(group, 'safeZone', 0, 200);
         const margin = folder.add(group, 'margin', 0, 200);
@@ -125,10 +127,10 @@ Promise.all([
         const pixelCenter = lngLatToZoomPoint([center.lng, center.lat], zoom);
 
         bounds = {
-            minX: pixelCenter[0] - 1.5 * size.x * retinaFactor,
-            minY: pixelCenter[1] - 1.5 * size.y * retinaFactor,
-            maxX: pixelCenter[0] + 1.5 * size.x * retinaFactor,
-            maxY: pixelCenter[1] + 1.5 * size.y * retinaFactor,
+            minX: (pixelCenter[0] - 0.75 * size.x) * retinaFactor,
+            minY: (pixelCenter[1] - 0.75 * size.y) * retinaFactor,
+            maxX: (pixelCenter[0] + 0.75 * size.x) * retinaFactor,
+            maxY: (pixelCenter[1] + 0.75 * size.y) * retinaFactor,
         };
 
         if (zoomChanged) {
@@ -136,14 +138,23 @@ Promise.all([
                 const marker = markers[i];
                 marker.prevGroupIndex = undefined;
                 marker.iconIndex = -1;
-                marker.pixelPosition = mapPointToZoomPoint(marker.mapPoint, zoom);
+                const pixelPosition = mapPointToZoomPoint(marker.mapPoint, zoom);
+                marker.pixelPosition = [pixelPosition[0] * retinaFactor, pixelPosition[1] * retinaFactor];
             }
             zoomChanged = false;
         }
 
+        // В генерал нужно отправлять priorityGroups с офсетами взависиомсти от ретина фактора
+        const priorityGroups: PriorityGroup[] = configPriorityGroups.map((group) => ({
+            iconIndex: group.iconIndex,
+            safeZone: group.safeZone * retinaFactor,
+            margin: group.margin * retinaFactor,
+            degradation: group.degradation * retinaFactor,
+        }));
+
         // tslint:disable-next-line
         console.time('gen');
-        general.generalize(bounds, retinaFactor, priorityGroups, atlas.sprites, markers).then(() => {
+        general.generalize(bounds, priorityGroups, atlas.sprites, markers).then(() => {
             // tslint:disable-next-line
             console.timeEnd('gen');
             generalizationIsBusy = false;

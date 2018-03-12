@@ -39,14 +39,12 @@ export class General {
 
     public generalize(
         bounds: BBox,
-        pixelRatio: number,
         priorityGroups: PriorityGroup[],
         sprites: Sprite[],
         markers: Marker[],
     ): Promise<{}> {
         const message: JobMessage = {
             bounds,
-            pixelRatio,
             priorityGroups,
             sprites,
         };

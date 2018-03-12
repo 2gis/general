@@ -94,7 +94,7 @@ describe('generalize.ts', () => {
         });
 
         it('создает простой bbox', () => {
-            createBBox(bbox, 100, 150, 1, [10, 25], [0.5, 1], 1, 25, 40, 0);
+            createBBox(bbox, 100, 150, [10, 25], [0.5, 1], 25, 40, 0);
 
             const expect: BBox = {
                 minX: 20,
@@ -107,7 +107,7 @@ describe('generalize.ts', () => {
         });
 
         it('обрезает bbox по границам экрана', () => {
-            createBBox(bbox, 100, 35, 1, [10, 25], [0.5, 1], 1, 0, 40, 0);
+            createBBox(bbox, 100, 35, [10, 25], [0.5, 1], 0, 40, 0);
 
             const expect: BBox = {
                 minX: 0,
@@ -120,38 +120,12 @@ describe('generalize.ts', () => {
         });
 
         it('округляет все значения bbox', () => {
-            createBBox(bbox, 100, 150, 1, [10, 25], [0.5, 1], 1, 25.1, 40.9, 0);
+            createBBox(bbox, 100, 150, [10, 25], [0.5, 1], 25.1, 40.9, 0);
 
             const expect: BBox = {
                 minX: 20,
                 minY: 15,
                 maxX: 30,
-                maxY: 40,
-            };
-
-            deepEqual(bbox, expect);
-        });
-
-        it('если pixelRatio = 2, размеры и координаты увеличивает в 2 раза', () => {
-            createBBox(bbox, 100, 150, 2, [10, 25], [0.5, 1], 1, 25, 40, 0);
-
-            const expect: BBox = {
-                minX: 40,
-                minY: 30,
-                maxX: 60,
-                maxY: 80,
-            };
-
-            deepEqual(bbox, expect);
-        });
-
-        it('если pixelDensity = 2, размеры уменьшает в 2 раза', () => {
-            createBBox(bbox, 100, 150, 1, [10, 25], [0.5, 1], 2, 25, 40, 0);
-
-            const expect: BBox = {
-                minX: 22,
-                minY: 27,
-                maxX: 27,
                 maxY: 40,
             };
 
@@ -228,7 +202,6 @@ describe('generalize.ts', () => {
 
                 msg = {
                     bounds: { minX: 0, minY: 0, maxX: 100, maxY: 100 },
-                    pixelRatio: 1,
                     priorityGroups: [{
                         safeZone: 0,
                         margin: 0,
@@ -238,7 +211,6 @@ describe('generalize.ts', () => {
                     sprites: [{
                         size: [10, 10],
                         anchor: [0.5, 0.5],
-                        pixelDensity: 1,
                     }],
                     markerCount: markers.length,
                     markers: markerArray,
@@ -306,7 +278,6 @@ describe('generalize.ts', () => {
 
                 msg = {
                     bounds: { minX: 0, minY: 0, maxX: 100, maxY: 100 },
-                    pixelRatio: 1,
                     priorityGroups: [{
                         safeZone: 0,
                         margin: 0,
@@ -326,15 +297,12 @@ describe('generalize.ts', () => {
                     sprites: [{
                         size: [10, 10],
                         anchor: [0.5, 0.5],
-                        pixelDensity: 1,
                     }, {
                         size: [6, 6],
                         anchor: [0.5, 0.5],
-                        pixelDensity: 1,
                     }, {
                         size: [2, 2],
                         anchor: [0.5, 0.5],
-                        pixelDensity: 1,
                     }],
                     markerCount: markers.length,
                     markers: markerArray,
@@ -383,7 +351,6 @@ describe('generalize.ts', () => {
 
             const msg: WorkerMessage = {
                 bounds: { minX: 100, minY: 100, maxX: 200, maxY: 200 },
-                pixelRatio: 1,
                 priorityGroups: [{
                     safeZone: 10,
                     margin: 10,
@@ -393,7 +360,6 @@ describe('generalize.ts', () => {
                 sprites: [{
                     size: [10, 10],
                     anchor: [0.5, 0.5],
-                    pixelDensity: 1,
                 }],
                 markerCount: markers.length,
                 markers: markerArray,
@@ -419,7 +385,6 @@ describe('generalize.ts', () => {
 
             const msg: WorkerMessage = {
                 bounds: { minX: 0, minY: 0, maxX: 100, maxY: 100 },
-                pixelRatio: 1,
                 priorityGroups: [{
                     safeZone: 10,
                     margin: 10,
@@ -429,7 +394,6 @@ describe('generalize.ts', () => {
                 sprites: [{
                     size: [10, 10],
                     anchor: [0.5, 0.5],
-                    pixelDensity: 1,
                 }],
                 markerCount: markers.length,
                 markers: markerArray,
