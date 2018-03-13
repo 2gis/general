@@ -13,7 +13,7 @@ Fast marker generalization algorithm
 ## Общий принцип работы ##
 На вход алгоритму генерализации маркеров передается большой список маркеров. Алгоритм во время работы откидывает какое-то количество маркеров из этого списка так, чтобы оставшиеся отобразились на карте не пересекаясь друг с другом.
 
-![generalbeforeandafter](https://2gis.github.io/general/img/generalbeforeandafter.png)
+![generalbeforeandafter](https://2gis.github.io/general/img/generalbeforeandafter.png)\
 _Пример отображения маркеров на карте до и после генерализации_
 
 Считается, что список маркеров отсортирован в порядке убывания приоритета. Маркера идущие впереди списка имеет больше шансов отобразиться на карте.
@@ -54,7 +54,7 @@ _Пример отображения маркеров на карте до и п
 
 Это параметр можно использовать, чтобы освободить зону на карте вокруг одного маркера от любых других:
 
-![margin](https://2gis.github.io/general/img/margin.png)
+![margin](https://2gis.github.io/general/img/margin.png)\
 _Слева параметр margin равен 0, справа – 40_
 
 ### degradation ###
@@ -62,7 +62,7 @@ _Слева параметр margin равен 0, справа – 40_
 
 Таким образом можно выделить одни маркера, не уничтожая других полностью:
 
-![degradation](https://2gis.github.io/general/img/degradation.png)
+![degradation](https://2gis.github.io/general/img/degradation.png)\
 _Слева параметр degradation равен 0, справа - 40_
 
 ## Установка ##
