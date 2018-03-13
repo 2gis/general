@@ -19,12 +19,13 @@
     "url": "git://github.com/2gis/general.git"
   },
   "main": "dist/general.js",
+  "typings": "dist/src/index.d.ts",
   "scripts": {
     "start": "npm run dev",
     "test": "npm run lint && npm run unit",
     "dev": "webpack-dev-server",
-    "build": "NODE_ENV=production webpack",
-    "builddemo": "NODE_ENV=demo webpack",
+    "build": "webpack --env.production",
+    "builddemo": "webpack --env.demo",
     "unit": "TS_NODE_COMPILER_OPTIONS='{\"module\":\"commonjs\"}' mocha --compilers ts:ts-node/register test/**/*.spec.ts",
     "unit-dev": "TS_NODE_COMPILER_OPTIONS='{\"module\":\"commonjs\"}' mocha -w --compilers ts:ts-node/register test/**/*.spec.ts",
     "lint": "tslint 'src/**/*.ts' 'demo/**/*.ts' 'test/**/*.ts'"
@@ -35,6 +36,7 @@
     "@types/leaflet": "^1.0.66",
     "@types/mocha": "^2.2.41",
     "@types/node": "^8.0.14",
+    "fork-ts-checker-webpack-plugin": "^0.4.1",
     "mocha": "^3.4.2",
     "ts-loader": "^2.3.1",
     "ts-node": "^3.2.1",

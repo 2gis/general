@@ -1,28 +1,35 @@
+const ForkTsCheckerWebpackPlugin = require('fork-ts-checker-webpack-plugin');
 const webpack = require('webpack');
 const path = require('path');
 
-const env = process.env.NODE_ENV;
-const config = {
-    module: {
-        rules: [
-            {
+module.exports = (env = {}) => {
+    const tsCheckerPlugin = new ForkTsCheckerWebpackPlugin({
+        watch: ['./src'],
+    });
+
+    const config = {
+        module: {
+            rules: [{
                 test: /\.ts$/,
                 exclude: /(node_modules)/,
-                use: 'ts-loader'
-            }
-        ]
-    },
-    resolve: {
-        modules: [
-            path.resolve(__dirname, 'node_modules'),
-            path.resolve(__dirname)
-        ],
-        extensions: ['.ts', '.js']
-    }
-};
+                use: {
+                    loader: 'ts-loader',
+                    options: {
+                        transpileOnly: !env.production,
+                    },
+                },
+            }],
+        },
+        resolve: {
+            modules: [
+                path.resolve(__dirname, 'node_modules'),
+                path.resolve(__dirname),
+            ],
+            extensions: ['.ts', '.js'],
+        }
+    };
 
-switch (env) {
-    case 'production':
+    if (env.production) {
         Object.assign(config, {
             devtool: 'source-map',
             entry: './src/index.ts',
@@ -31,45 +38,40 @@ switch (env) {
                 path: path.resolve(__dirname, 'dist'),
                 publicPath: '/dist/',
                 libraryTarget: 'umd',
-                library: 'General'
+                library: 'General',
             },
-            plugins:[
-                new webpack.optimize.UglifyJsPlugin({
-                    sourceMap: true
-                })
-            ]
+            plugins: [new webpack.optimize.UglifyJsPlugin({sourceMap: true})],
         });
-        break;
-    case 'demo':
+    } else if (env.demo) {
         Object.assign(config, {
             devtool: 'source-map',
             entry: './demo/index.ts',
             output: {
                 filename: 'demo.js',
                 path: path.resolve(__dirname, 'dist'),
-                publicPath: '/dist/'
+                publicPath: '/dist/',
             },
-            plugins:[
-                new webpack.optimize.UglifyJsPlugin({
-                    sourceMap: true
-                })
-            ]
+            plugins: [
+                tsCheckerPlugin,
+                new webpack.optimize.UglifyJsPlugin({sourceMap: true}),
+            ],
         });
-        break;
-    default:
+    } else {
         Object.assign(config, {
             devtool: 'eval-source-map',
             entry: './demo/index.ts',
             output: {
                 filename: 'demo.js',
                 path: path.resolve(__dirname, 'dist'),
-                publicPath: '/dist/'
+                publicPath: '/dist/',
             },
+            plugins: [tsCheckerPlugin],
             devServer: {
                 host: '0.0.0.0',
-                port: 3000
-            }
-        })
-}
+                port: 3000,
+            },
+        });
+    }
 
-module.exports = config;
+    return config;
+};
