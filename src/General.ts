@@ -42,7 +42,7 @@ export class General {
         priorityGroups: PriorityGroup[],
         sprites: Sprite[],
         markers: Marker[],
-    ): Promise<{}> {
+    ): Promise<void> {
         const message: JobMessage = {
             bounds,
             priorityGroups,
