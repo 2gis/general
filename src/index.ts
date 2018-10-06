@@ -4,6 +4,7 @@ export {
 
 export {
     Marker,
+    Sprite,
     PriorityGroup,
     BBox,
 } from './types';
