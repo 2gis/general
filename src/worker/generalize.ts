@@ -1,4 +1,4 @@
-import { BBox, Vec2, WorkerMessage } from '../types';
+import { BBox, Vec2, WorkerMessage, PriorityGroup, Sprite } from '../types';
 import { stride, offsets } from '../markerArray';
 
 const collideBBox: BBox = { minX: 0, minY: 0, maxX: 0, maxY: 0 };
@@ -38,121 +38,131 @@ export function generalize(data: WorkerMessage) {
         degradationPlanes[i] = new Uint8Array(planeLength);
     }
 
-    /**
-     * Одни и те же маркера могут участвовать в генерализации несколько раз,
-     * такие маркера имеют поле prevGroupIndex.
-     *
-     * Чтобы не делать лишнюю работу, и чтобы результат генерализации был устойчив,
-     * мы используем результаты предыдущей генерализации.
-     */
-
-    // Поэтому вначале закрашиваем плоскость повторно генерализуемыми маркерами
+    const prevIconIndices = new Int8Array(markerCount);
     for (let i = 0; i < markerCount; i++) {
-        const markerOffset = i * stride;
+        const index = i * stride + offsets.iconIndex;
 
-        const prevGroupIndex = markers[markerOffset + offsets.prevGroupIndex];
+        // Сохраняем предыдущие индексы иконок для работы гистерезиса
+        prevIconIndices[i] = markers[index];
 
-        // prevGroupIndex не равен NaN, если маркер уже проходил генерализацию
-        if (!isNaN(prevGroupIndex)) {
-            const pixelPositionX = markers[markerOffset + offsets.pixelPositionX] - bounds.minX;
-            const pixelPositionY = markers[markerOffset + offsets.pixelPositionY] - bounds.minY;
-            const { iconIndex, margin, degradation } = priorityGroups[prevGroupIndex];
-            const sprite = sprites[iconIndex];
-
-            if (!sprite) {
-                // smth shit
-                continue;
-            }
-
-            const { size, anchor } = sprite;
-
-            // Проверяем, попадает ли иконка маркера в новые границы
-            createBBox(collideBBox, planeWidth, planeHeight, size, anchor,
-                pixelPositionX, pixelPositionY, 0);
-
-            if (bboxIsEmpty(collideBBox)) {
-                markers[markerOffset + offsets.iconIndex] = -1;
-            } else {
-                markers[markerOffset + offsets.iconIndex] = iconIndex;
-            }
-
-            // Вставляем маркеры на основную плоскость и плоскость деградации без всяких проверок
-            createBBox(marginBBox, planeWidth, planeHeight, size, anchor,
-                pixelPositionX, pixelPositionY, margin);
-
-            if (!bboxIsEmpty(marginBBox)) {
-                putToArray(plane, planeWidth, marginBBox);
-            }
-
-            createBBox(degradationBBox, planeWidth, planeHeight, size, anchor,
-                pixelPositionX, pixelPositionY, degradation);
-
-            if (!bboxIsEmpty(degradationBBox)) {
-                putToArray(degradationPlanes[prevGroupIndex], planeWidth, degradationBBox);
-            }
-        }
+        // Сбрасываем значение iconIndex у маркера
+        markers[index] = -1;
     }
 
     // Здесь начинает работу основной алгоритм генерализации.
     // У нас два вложенных цикла: по группам -> по маркерам.
+    // Циклы запускаются два раза: первый прогон — для маркеров, которые в данный момент видны на экране
     for (let i = 0; i < priorityGroups.length; i++) {
-        const group = priorityGroups[i];
-        const { safeZone, iconIndex, margin, degradation } = group;
-        const sprite = sprites[iconIndex];
-
+        const sprite = sprites[priorityGroups[i].iconIndex];
         if (!sprite) {
             // smth shit
             continue;
         }
 
-        const { size, anchor } = sprite;
         const prevDegradationPlane = i !== 0 ? degradationPlanes[i - 1] : undefined;
         const degradationPlane = i !== priorityGroups.length - 1 ? degradationPlanes[i] : undefined;
 
         for (let j = 0; j < markerCount; j++) {
-            const markerOffset = j * stride;
-
-            const groupIndex = markers[markerOffset + offsets.groupIndex];
-            const prevGroupIndex = markers[markerOffset + offsets.prevGroupIndex];
-            const pixelPositionX = markers[markerOffset + offsets.pixelPositionX] - bounds.minX;
-            const pixelPositionY = markers[markerOffset + offsets.pixelPositionY] - bounds.minY;
-
-            // Пропускаем маркера, чей изначальный groupIndex больше индекса текущей перебираемой группы.
-            // Такие маркера будут проверены в следующах группах.
-            // Также пропускаем повторно генерализуемые маркера.
-            if (groupIndex > i || !isNaN(prevGroupIndex)) {
-                continue;
-            }
-
-            // Маркер первый раз попал в область деградации – пропускаем
-            createBBox(marginBBox, planeWidth, planeHeight, size, anchor, pixelPositionX, pixelPositionY, margin);
-            if (bboxIsEmpty(marginBBox) || (groupIndex === i &&
-                    prevDegradationPlane && collide(prevDegradationPlane, planeWidth, marginBBox))
-            ) {
-                continue;
-            }
-
-            // Область маркера пересекает область уже вставшего маркера – пропускаем
-            createBBox(collideBBox, planeWidth, planeHeight, size, anchor, pixelPositionX, pixelPositionY, safeZone);
-            if (bboxIsEmpty(collideBBox)) {
-                continue;
-            }
-
-            if (!collide(plane, planeWidth, collideBBox)) {
-                createBBox(degradationBBox, planeWidth, planeHeight, size, anchor,
-                    pixelPositionX, pixelPositionY, degradation);
-
-                // Если все хорошо и маркер выжил, закрашиваем его в двух плоскостях
-                putToArray(plane, planeWidth, marginBBox);
-
-                if (degradationPlane) {
-                    putToArray(degradationPlane, planeWidth, degradationBBox);
-                }
-
-                markers[markerOffset + offsets.iconIndex] = iconIndex;
-                markers[markerOffset + offsets.prevGroupIndex] = i;
+            if (prevIconIndices[j] !== -1) {
+                generalizeMarker(
+                    markers,
+                    priorityGroups,
+                    sprites,
+                    bounds,
+                    prevDegradationPlane,
+                    degradationPlane,
+                    plane,
+                    planeWidth,
+                    planeHeight,
+                    i, j,
+                );
             }
         }
+    }
+
+    // Второй прогон циклов — для маркеров, которые в данный момент не видны на экране.
+    for (let i = 0; i < priorityGroups.length; i++) {
+        const sprite = sprites[priorityGroups[i].iconIndex];
+        if (!sprite) {
+            // smth shit
+            continue;
+        }
+
+        const prevDegradationPlane = i !== 0 ? degradationPlanes[i - 1] : undefined;
+        const degradationPlane = i !== priorityGroups.length - 1 ? degradationPlanes[i] : undefined;
+
+        for (let j = 0; j < markerCount; j++) {
+            if (prevIconIndices[j] === -1) {
+                generalizeMarker(
+                    markers,
+                    priorityGroups,
+                    sprites,
+                    bounds,
+                    prevDegradationPlane,
+                    degradationPlane,
+                    plane,
+                    planeWidth,
+                    planeHeight,
+                    i, j,
+                );
+            }
+        }
+    }
+}
+
+function generalizeMarker(
+    markers: Float32Array,
+    priorityGroups: PriorityGroup[],
+    sprites: Sprite[],
+    bounds: BBox,
+    prevDegradationPlane: Uint8Array | undefined,
+    degradationPlane: Uint8Array | undefined,
+    plane: Uint8Array,
+    planeWidth: number,
+    planeHeight: number,
+    groupIndex: number,
+    markerIndex: number,
+): void {
+    const { safeZone, iconIndex, margin, degradation } = priorityGroups[groupIndex];
+    const { size, anchor } = sprites[iconIndex];
+
+    const markerOffset = markerIndex * stride;
+    const markerGroupIndex = markers[markerOffset + offsets.groupIndex];
+    const pixelPositionX = markers[markerOffset + offsets.pixelPositionX] - bounds.minX;
+    const pixelPositionY = markers[markerOffset + offsets.pixelPositionY] - bounds.minY;
+
+    // Пропускаем маркера, чей изначальный groupIndex больше индекса текущей перебираемой группы.
+    // Такие маркера будут проверены в следующах группах.
+    if (markerGroupIndex > groupIndex) {
+        return;
+    }
+
+    // Маркер первый раз попал в область деградации – пропускаем
+    createBBox(marginBBox, planeWidth, planeHeight, size, anchor, pixelPositionX, pixelPositionY, margin);
+    if (bboxIsEmpty(marginBBox) || (markerGroupIndex === groupIndex &&
+            prevDegradationPlane && collide(prevDegradationPlane, planeWidth, marginBBox))
+    ) {
+        return;
+    }
+
+    // Область маркера пересекает область уже вставшего маркера – пропускаем
+    createBBox(collideBBox, planeWidth, planeHeight, size, anchor, pixelPositionX, pixelPositionY, safeZone);
+    if (bboxIsEmpty(collideBBox)) {
+        return;
+    }
+
+    if (!collide(plane, planeWidth, collideBBox)) {
+        createBBox(degradationBBox, planeWidth, planeHeight, size, anchor,
+            pixelPositionX, pixelPositionY, degradation);
+
+        // Если все хорошо и маркер выжил, закрашиваем его в двух плоскостях
+        putToArray(plane, planeWidth, marginBBox);
+
+        if (degradationPlane) {
+            putToArray(degradationPlane, planeWidth, degradationBBox);
+        }
+
+        markers[markerOffset + offsets.iconIndex] = iconIndex;
     }
 }
 
@@ -230,10 +240,6 @@ function putToArray(arr: Uint8Array, width: number, bbox: BBox) {
     }
 }
 
-function isNaN(a) {
-    return a !== a;
-}
-
 function bboxIsEmpty(a: BBox): boolean {
     return a.minX === a.maxX || a.minY === a.maxY;
 }
@@ -264,7 +270,6 @@ function createBBox(
 export const testHandlers = {
     collide,
     putToArray,
-    isNaN,
     bboxIsEmpty,
     createBBox,
     generalize,

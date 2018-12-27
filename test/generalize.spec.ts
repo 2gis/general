@@ -9,7 +9,6 @@ const {
     collide,
     createBBox,
     bboxIsEmpty,
-    isNaN,
     generalize,
 } = testHandlers;
 
@@ -344,7 +343,6 @@ describe('generalize.ts', () => {
                 pixelPosition: [50, 50],
                 groupIndex: 0,
                 iconIndex: 0,
-                prevGroupIndex: 0,
             }];
             const markerArray = new Float32Array(markers.length * stride);
             pack(markerArray, markers);
@@ -378,7 +376,6 @@ describe('generalize.ts', () => {
                 pixelPosition: [50, 50],
                 groupIndex: 0,
                 iconIndex: -1,
-                prevGroupIndex: 0,
             }];
             const markerArray = new Float32Array(markers.length * stride);
             pack(markerArray, markers);
