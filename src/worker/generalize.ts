@@ -51,11 +51,11 @@ export function generalize(data: WorkerMessage) {
 
     // Здесь начинает работу основной алгоритм генерализации.
     // У нас два вложенных цикла: по группам -> по маркерам.
-    // Циклы запускаются два раза: первый прогон — для маркеров, которые в данный момент видны на экране
+    // Циклы запускаются два раза: первый прогон — для маркеров, которые были видны на экране
     for (let i = 0; i < priorityGroups.length; i++) {
         const sprite = sprites[priorityGroups[i].iconIndex];
         if (!sprite) {
-            // smth shit
+            // Защищаемся от ситуации, когда в конфиге передан некорректный индекс спрайта
             continue;
         }
 
@@ -84,7 +84,7 @@ export function generalize(data: WorkerMessage) {
     for (let i = 0; i < priorityGroups.length; i++) {
         const sprite = sprites[priorityGroups[i].iconIndex];
         if (!sprite) {
-            // smth shit
+            // Защищаемся от ситуации, когда в конфиге передан некорректный индекс спрайта
             continue;
         }
 
