@@ -8,9 +8,7 @@ export interface Sprite {
 export interface Marker {
     pixelPosition: Vec2; // позиция маркера в пикселях
     groupIndex: number; // Индекс в массиве групп, к которой маркер будет изначально принадлежать
-
-    iconIndex?: number; // Индекс спрайта в атласе, добавляется в ходе генерализации
-    prevGroupIndex?: number; // Параметр выставляемый после генерализации, нужен, чтобы не считать старые маркера
+    iconIndex: number; // Индекс спрайта в атласе, добавляется в ходе генерализации
 }
 
 export interface PriorityGroup {

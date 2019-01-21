@@ -136,8 +136,6 @@ Promise.all([
         if (zoomChanged) {
             for (let i = 0; i < markers.length; i++) {
                 const marker = markers[i];
-                marker.prevGroupIndex = undefined;
-                marker.iconIndex = -1;
                 const pixelPosition = mapPointToZoomPoint(marker.mapPoint, zoom);
                 marker.pixelPosition = [pixelPosition[0] * retinaFactor, pixelPosition[1] * retinaFactor];
             }
@@ -165,7 +163,7 @@ Promise.all([
             if (drawingOffsets) {
                 for (let i = 0; i < markers.length; i++) {
                     const marker = markers[i];
-                    if (marker.iconIndex === -1 || marker.iconIndex === undefined) {
+                    if (marker.iconIndex === -1) {
                         continue;
                     }
 

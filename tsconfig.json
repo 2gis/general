@@ -19,7 +19,8 @@
         "importHelpers": false,
         "noUnusedLocals": true,
         "noUnusedParameters": true,
-        "declaration": true
+        "declaration": true,
+        "skipLibCheck": true
     },
     "exclude": [
         "node_modules"
