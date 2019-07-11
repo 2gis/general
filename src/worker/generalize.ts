@@ -169,10 +169,9 @@ function generalizeMarker(
 /**
  * Проверяет, пересекает ли область что-либо в плоскости
  *
- * @param {Uint8Array} arr Плоскость
- * @param {number} width Ширина плоскости
- * @param {BBox} bbox Проверяемая область
- * @returns {boolean}
+ * @param arr Плоскость
+ * @param width Ширина плоскости
+ * @param bbox Проверяемая область
  */
 function collide(arr: Uint8Array, width: number, bbox: BBox): boolean {
     const x1 = bbox.minX;
@@ -210,9 +209,9 @@ function collide(arr: Uint8Array, width: number, bbox: BBox): boolean {
 /**
  * Закрашиваем переданную область на плоскости
  *
- * @param {Uint8Array} arr Плоскость
- * @param {number} width Ширина плоскости
- * @param {BBox} bbox Закрашиваемая область
+ * @param arr Плоскость
+ * @param width Ширина плоскости
+ * @param bbox Закрашиваемая область
  */
 function putToArray(arr: Uint8Array, width: number, bbox: BBox) {
     const x1 = bbox.minX;

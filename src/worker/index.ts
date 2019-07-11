@@ -6,6 +6,7 @@ export interface WorkerGlobalScope {
     postMessage: (message: any, transfer?: any[]) => void;
 }
 
+// tslint:disable-next-line:no-default-export
 export default (self: WorkerGlobalScope) => {
     self.onmessage = (event) => {
         const data = event.data;
