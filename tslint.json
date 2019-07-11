@@ -1,58 +1,61 @@
 {
-  "extends": [
-    "tslint:recommended",
-    "tslint-eslint-rules"
-  ],
-  "rules": {
-    "no-null-keyword": true,
-    "no-shadowed-variable": false,
-    "ordered-imports": [false],
-    "only-arrow-functions": [true, "allow-declarations", "allow-named-functions"],
-    "object-literal-key-quotes": [true, "consistent"],
-    "quotemark": [
-      true,
-      "single"
-    ],
-    "max-classes-per-file": [false],
-    "class-name": false,
-    "interface-name": [false],
-    "no-namespace": "allow-decalarations",
-    "object-literal-sort-keys": false,
-    "prefer-for-of": false,
-    "ter-indent": [2, 4, {"SwitchCase": 1}],
-    "trailing-comma": [
-      true,
-      {
-        "singleline": "never",
-        "multiline": "always"
-      }
-    ],
-    "no-bitwise": false,
-    "no-string-literal": false,
-    "no-var-requires": false,
-    "object-curly-spacing": [
-      true,
-      "always"
-    ],
-    "array-bracket-spacing": [
-      true,
-      "never"
-    ],
-    "no-irregular-whitespace": "error",
-    "valid-typeof": 2,
-    "no-multi-spaces": true,
-    "block-spacing": "always",
-    "brace-style": [
-      2,
-      "1tbs"
-    ],
-    "variable-name": [
-      true,
-      "ban-keywords",
-      "check-format",
-      "allow-pascal-case",
-      "allow-leading-underscore"                
-    ],
-    "no-constant-condition": true
-  }
+    "extends": ["tslint:recommended", "tslint-eslint-rules"],
+    "rules": {
+        "no-console": false,
+        "no-constant-condition": true,
+        "triple-equals": true,
+        "no-multi-spaces": true,
+        "array-bracket-spacing": [true, "never"],
+        "block-spacing": [true, "always"],
+        "brace-style": [true, "1tbs", { "allowSingleLine": true }],
+        "ter-indent": [2, 4, {"SwitchCase": 1}],
+        "linebreak-style": [true, "LF"],
+        "no-bitwise": false,
+        "indent": [true, "spaces", 4],
+        "no-trailing-whitespace": true,
+        "object-curly-spacing": [false],
+        "object-literal-key-quotes": [true, "as-needed"],
+        "quotemark": [true, "single", "avoid-escape"],
+        "space-in-parens": [true, "never"],
+        "ter-no-tabs": true,
+        "ter-arrow-parens": [true],
+        "no-shadowed-variable": false,
+        "ordered-imports": [false],
+        "only-arrow-functions": [false],
+        "forin": false,
+        "max-classes-per-file": [false, 1],
+        "class-name": true,
+        "interface-name": [false],
+        "no-namespace": [true, "allow-decalarations"],
+        "object-literal-sort-keys": false,
+        "prefer-for-of": false,
+        "trailing-comma": [true, { "singleline": "never", "multiline": "always" }],
+        "no-string-literal": false,
+        "no-var-requires": false,
+        "no-irregular-whitespace": true,
+        "no-default-export": true,
+        "variable-name": [false],
+        "no-empty": false,
+        "one-variable-per-declaration": false,
+        "align": false,
+        "no-redundant-jsdoc": true,
+        "jsdoc-format": true,
+        "no-inferrable-types": true,
+        "semicolon": [true, "always", "ignore-bound-class-methods"],
+        "member-access": true,
+        "member-ordering": [
+            true,
+            {
+                "order": [
+                    "public-instance-field",
+                    "protected-instance-field",
+                    "private-instance-field",
+                    "constructor",
+                    "public-instance-method",
+                    "protected-instance-method",
+                    "private-instance-method"
+                ]
+            }
+        ]
+    }
 }

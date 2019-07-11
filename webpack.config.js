@@ -1,37 +1,43 @@
 const ForkTsCheckerWebpackPlugin = require('fork-ts-checker-webpack-plugin');
-const webpack = require('webpack');
 const path = require('path');
 
-module.exports = (env = {}) => {
-    const tsCheckerPlugin = new ForkTsCheckerWebpackPlugin({
-        watch: ['./src'],
-    });
+module.exports = (_, args) => {
+    const production = args.mode === 'production' && !args.demo;
 
     const config = {
         module: {
-            rules: [{
-                test: /\.ts$/,
-                exclude: /(node_modules)/,
-                use: {
-                    loader: 'ts-loader',
-                    options: {
-                        transpileOnly: !env.production,
+            rules: [
+                {
+                    test: /\.ts$/,
+                    exclude: /node_modules/,
+                    use: {
+                        loader: 'ts-loader',
+                        options: {
+                            transpileOnly: !production,
+                        },
                     },
                 },
-            }],
-        },
-        resolve: {
-            modules: [
-                path.resolve(__dirname, 'node_modules'),
-                path.resolve(__dirname),
             ],
+        },
+
+        resolve: {
             extensions: ['.ts', '.js'],
-        }
+        },
+
+        devtool: 'source-map',
+
+        devServer: {
+            host: '0.0.0.0',
+            port: 3000,
+            stats: {
+                modules: false,
+            },
+            disableHostCheck: true,
+        },
     };
 
-    if (env.production) {
+    if (production) {
         Object.assign(config, {
-            devtool: 'source-map',
             entry: './src/index.ts',
             output: {
                 filename: 'general.js',
@@ -40,11 +46,9 @@ module.exports = (env = {}) => {
                 libraryTarget: 'umd',
                 library: 'General',
             },
-            plugins: [new webpack.optimize.UglifyJsPlugin({sourceMap: true})],
         });
-    } else if (env.demo) {
+    } else {
         Object.assign(config, {
-            devtool: 'source-map',
             entry: './demo/index.ts',
             output: {
                 filename: 'demo.js',
@@ -52,24 +56,10 @@ module.exports = (env = {}) => {
                 publicPath: '/dist/',
             },
             plugins: [
-                tsCheckerPlugin,
-                new webpack.optimize.UglifyJsPlugin({sourceMap: true}),
+                new ForkTsCheckerWebpackPlugin({
+                    watch: ['./src', './demo'],
+                }),
             ],
-        });
-    } else {
-        Object.assign(config, {
-            devtool: 'eval-source-map',
-            entry: './demo/index.ts',
-            output: {
-                filename: 'demo.js',
-                path: path.resolve(__dirname, 'dist'),
-                publicPath: '/dist/',
-            },
-            plugins: [tsCheckerPlugin],
-            devServer: {
-                host: '0.0.0.0',
-                port: 3000,
-            },
         });
     }
 
