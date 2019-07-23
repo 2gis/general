@@ -9,8 +9,16 @@ export interface WorkerGlobalScope {
 // tslint:disable-next-line:no-default-export
 export default (self: WorkerGlobalScope) => {
     self.onmessage = (event) => {
-        const data = event.data;
-        generalize(data);
-        self.postMessage(data.markers);
+        generalize(event.data);
+
+        const { markers, labels } = event.data;
+
+        self.postMessage({
+            markerArray: markers,
+            labelArray: labels,
+        }, [
+            markers.buffer,
+            labels.buffer,
+        ]);
     };
 };

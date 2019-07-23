@@ -14,6 +14,15 @@ export interface Marker {
     groupIndex: number;
     /** Индекс спрайта в атласе, добавляется в ходе генерализации */
     iconIndex: number;
+    /** Подпись маркера */
+    htmlLabel?: Label;
+}
+
+export interface Label {
+    offset: Vec2;
+    width: number;
+    height: number;
+    display: boolean;
 }
 
 export interface PriorityGroup {
@@ -46,10 +55,14 @@ export interface WorkerMessage {
     sprites: Sprite[];
     markerCount: number;
     markers: Float32Array;
+    labelCount: number;
+    labels: Float32Array;
 }
 
 export interface Job {
     message: JobMessage;
     markers: Marker[];
+    markerCount: number;
+    labelCount: number;
     resolve: () => void;
 }

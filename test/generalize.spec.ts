@@ -213,6 +213,8 @@ describe('generalize.ts', () => {
                     }],
                     markerCount: markers.length,
                     markers: markerArray,
+                    labels: new Float32Array(),
+                    labelCount: 0,
                 };
             });
 
@@ -305,6 +307,8 @@ describe('generalize.ts', () => {
                     }],
                     markerCount: markers.length,
                     markers: markerArray,
+                    labels: new Float32Array(),
+                    labelCount: 0,
                 };
             });
 
@@ -361,6 +365,8 @@ describe('generalize.ts', () => {
                 }],
                 markerCount: markers.length,
                 markers: markerArray,
+                labels: new Float32Array(),
+                labelCount: 0,
             };
 
             generalize(msg);
@@ -394,6 +400,8 @@ describe('generalize.ts', () => {
                 }],
                 markerCount: markers.length,
                 markers: markerArray,
+                labels: new Float32Array(),
+                labelCount: 0,
             };
 
             generalize(msg);
