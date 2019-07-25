@@ -14,6 +14,8 @@ export interface Marker {
     groupIndex: number;
     /** Индекс спрайта в атласе, добавляется в ходе генерализации */
     iconIndex: number;
+    /** Опциональный флаг, указывающий приоритетность маркера */
+    priority?: boolean;
     /** Подпись маркера */
     htmlLabel?: Label;
 }

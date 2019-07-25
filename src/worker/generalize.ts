@@ -8,7 +8,7 @@ const degradationBBox: BBox = { minX: 0, minY: 0, maxX: 0, maxY: 0 };
 const noMarginBBox: BBox = { minX: 0, minY: 0, maxX: 0, maxY: 0 };
 
 export function generalize(data: WorkerMessage) {
-    const { bounds, priorityGroups, sprites, markers, markerCount, labels, labelCount } = data;
+    const { bounds, priorityGroups, markers, markerCount, labels, labelCount } = data;
 
     const planeWidth = (bounds.maxX - bounds.minX >> 3) + 1 << 3; // Ширина должна быть кратна 8
     const planeHeight = bounds.maxY - bounds.minY;
@@ -54,7 +54,7 @@ export function generalize(data: WorkerMessage) {
         markers[index] = -1;
     }
 
-    const prevLabelState = new Int8Array(labelCount);
+    const prevLabelState = new Uint8Array(labelCount);
     for (let i = 0; i < labelCount; i++) {
         const index = i * labelArray.stride + labelArray.offsets.display;
 
@@ -65,9 +65,46 @@ export function generalize(data: WorkerMessage) {
         labels[index] = 0;
     }
 
-    // Здесь начинает работу основной алгоритм генерализации.
-    // У нас два вложенных цикла: по группам -> по маркерам.
-    // Циклы запускаются два раза: первый прогон — для маркеров, которые были видны на экране
+    // Здесь начинает работу основной алгоритм генерализации
+    // Генерализуем в таком порядке:
+    // 1. Приоритетные маркеры, видимые на экране, затем их подписи
+    // 2. Приоритетные маркеры, не видимые на экране, затем их подписи
+    // 3. Неприоритетные маркеры, видимые на экране, затем их подписи
+    // 4. Неприоритетные маркеры, не видимые на экране, затем их подписи
+    generalizePart(
+        data, plane, noMarginPlane, degradationPlanes, planeWidth, planeHeight,
+        prevIconIndices, prevLabelState, true, true,
+    );
+    generalizePart(
+        data, plane, noMarginPlane, degradationPlanes, planeWidth, planeHeight,
+        prevIconIndices, prevLabelState, false, true,
+    );
+    generalizePart(
+        data, plane, noMarginPlane, degradationPlanes, planeWidth, planeHeight,
+        prevIconIndices, prevLabelState, true, false,
+    );
+    generalizePart(
+        data, plane, noMarginPlane, degradationPlanes, planeWidth, planeHeight,
+        prevIconIndices, prevLabelState, false, false,
+    );
+
+}
+
+function generalizePart(
+    data: WorkerMessage,
+    plane: Uint8Array,
+    noMarginPlane: Uint8Array,
+    degradationPlanes: Uint8Array[],
+    planeWidth: number,
+    planeHeight: number,
+    prevIconIndices: Int8Array,
+    prevLabelState: Uint8Array,
+    processVisible: boolean,
+    processPriority: boolean,
+
+): void {
+    const { bounds, priorityGroups, sprites, markers, markerCount, labels, labelCount } = data;
+
     for (let i = 0; i < priorityGroups.length; i++) {
         const sprite = sprites[priorityGroups[i].iconIndex];
         if (!sprite) {
@@ -79,7 +116,13 @@ export function generalize(data: WorkerMessage) {
         const degradationPlane = i !== priorityGroups.length - 1 ? degradationPlanes[i] : undefined;
 
         for (let j = 0; j < markerCount; j++) {
-            if (prevIconIndices[j] !== -1) {
+            const isVisible = prevIconIndices[j] !== -1;
+            const isPriority = markers[markerArray.stride * j + markerArray.offsets.priority] === 1;
+
+            const visibilityOk = processVisible && isVisible || !processVisible && !isVisible;
+            const priorityOk = processPriority && isPriority || !processPriority && !isPriority;
+
+            if (visibilityOk && priorityOk) {
                 generalizeMarker(
                     markers,
                     priorityGroups,
@@ -98,43 +141,15 @@ export function generalize(data: WorkerMessage) {
     }
 
     for (let i = 0; i < labelCount; i++) {
-        if (prevLabelState[i] === 1) {
-            generalizeLabel(markers, labels, bounds, plane, noMarginPlane, planeWidth, planeHeight, i);
-        }
-    }
+        const markerIndex = labels[i * labelArray.stride + labelArray.offsets.markerIndex];
 
-    // Второй прогон циклов — для маркеров, которые в данный момент не видны на экране.
-    for (let i = 0; i < priorityGroups.length; i++) {
-        const sprite = sprites[priorityGroups[i].iconIndex];
-        if (!sprite) {
-            // Защищаемся от ситуации, когда в конфиге передан некорректный индекс спрайта
-            continue;
-        }
+        const isVisible = prevLabelState[i] === 1;
+        const isPriority = markers[markerIndex * markerArray.stride + markerArray.offsets.priority] === 1;
 
-        const prevDegradationPlane = i !== 0 ? degradationPlanes[i - 1] : undefined;
-        const degradationPlane = i !== priorityGroups.length - 1 ? degradationPlanes[i] : undefined;
+        const visibilityOk = processVisible && isVisible || !processVisible && !isVisible;
+        const priorityOk = processPriority && isPriority || !processPriority && !isPriority;
 
-        for (let j = 0; j < markerCount; j++) {
-            if (prevIconIndices[j] === -1) {
-                generalizeMarker(
-                    markers,
-                    priorityGroups,
-                    sprites,
-                    bounds,
-                    prevDegradationPlane,
-                    degradationPlane,
-                    plane,
-                    noMarginPlane,
-                    planeWidth,
-                    planeHeight,
-                    i, j,
-                );
-            }
-        }
-    }
-
-    for (let i = 0; i < labelCount; i++) {
-        if (prevLabelState[i] === 0) {
+        if (visibilityOk && priorityOk) {
             generalizeLabel(markers, labels, bounds, plane, noMarginPlane, planeWidth, planeHeight, i);
         }
     }

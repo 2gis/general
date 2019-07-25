@@ -6,6 +6,7 @@ export const offsets = {
     pixelPositionY: 1,
     groupIndex: 2,
     iconIndex: 3,
+    priority: 4,
 };
 
 export const stride = Object.keys(offsets).length;
@@ -21,6 +22,7 @@ export function pack(markerArray: Float32Array, markers: Marker[]) {
         markerArray[markerOffset + offsets.pixelPositionY] = marker.pixelPosition[1];
         markerArray[markerOffset + offsets.groupIndex] = marker.groupIndex;
         markerArray[markerOffset + offsets.iconIndex] = marker.iconIndex;
+        markerArray[markerOffset + offsets.priority] = Boolean(marker.priority) ? 1 : 0;
     }
 }
 
