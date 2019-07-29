@@ -15,7 +15,7 @@ export const stride = i;
 /**
  * Запаковывает переданный массив маркеров в типизированный массив для быстрой передачи в воркер
  */
-export function pack(labelArray: Float32Array, markers: Marker[]) {
+export function pack(labelArray: Float32Array, markers: Marker[], devicePixelRatio: number) {
     let labelOffset = 0;
 
     for (let i = 0; i < markers.length; i++) {
@@ -26,10 +26,10 @@ export function pack(labelArray: Float32Array, markers: Marker[]) {
         }
 
         labelArray[labelOffset + offsets.markerIndex] = i;
-        labelArray[labelOffset + offsets.offsetX] = label.offset[0] * window.devicePixelRatio;
-        labelArray[labelOffset + offsets.offsetY] = label.offset[1] * window.devicePixelRatio;
-        labelArray[labelOffset + offsets.width] = label.width * window.devicePixelRatio;
-        labelArray[labelOffset + offsets.height] = label.height * window.devicePixelRatio;
+        labelArray[labelOffset + offsets.offsetX] = label.offset[0] * devicePixelRatio;
+        labelArray[labelOffset + offsets.offsetY] = label.offset[1] * devicePixelRatio;
+        labelArray[labelOffset + offsets.width] = label.width * devicePixelRatio;
+        labelArray[labelOffset + offsets.height] = label.height * devicePixelRatio;
         labelArray[labelOffset + offsets.display] = label.display ? 1 : 0;
 
         labelOffset += stride;

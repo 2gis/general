@@ -81,7 +81,7 @@ export class General {
         }
 
         markerArray.pack(this.markerArray, markers);
-        labelArray.pack(this.labelArray, markers);
+        labelArray.pack(this.labelArray, markers, window.devicePixelRatio);
     }
 
     private dequeue() {

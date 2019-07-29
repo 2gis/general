@@ -1,8 +1,9 @@
 import { ok, equal, deepEqual } from 'assert';
-import { BBox, Marker, WorkerMessage } from '../src/types';
+import { BBox, Marker, WorkerMessage, Label } from '../src/types';
 
 import { testHandlers } from '../src/worker/generalize';
 import { pack, stride, unpack } from '../src/markerArray';
+import * as labels from '../src/labelArray';
 
 const {
     putToArray,
@@ -337,6 +338,221 @@ describe('generalize.ts', () => {
 
                 equal(markers[0].iconIndex, 0);
                 equal(markers[1].iconIndex, 2);
+            });
+        });
+
+        describe('Hysteresis and priority markers', () => {
+            let msg: WorkerMessage;
+
+            beforeEach(() => {
+                msg = {
+                    bounds: { minX: 0, minY: 0, maxX: 100, maxY: 100 },
+                    priorityGroups: [{
+                        safeZone: 0,
+                        margin: 0,
+                        degradation: 0,
+                        iconIndex: 0,
+                    }],
+                    sprites: [{
+                        size: [10, 10],
+                        anchor: [0.5, 0.5],
+                    }],
+                    markerCount: 0,
+                    markers: new Float32Array(),
+                    labels: new Float32Array(),
+                    labelCount: 0,
+                };
+            });
+
+            it ('Приоритетный маркер победил неприоритетный, расположенный раньше него в выдаче', () => {
+                const markers = [{
+                    pixelPosition: [50, 50],
+                    groupIndex: 0,
+                    iconIndex: 0,
+                }, {
+                    pixelPosition: [50, 50],
+                    groupIndex: 0,
+                    iconIndex: -1,
+                    priority: true,
+                }];
+
+                const markerArray = new Float32Array(markers.length * stride);
+                pack(markerArray, markers);
+
+                msg.markerCount = markers.length;
+                msg.markers = markerArray;
+
+                generalize(msg);
+                unpack(markers, markerArray);
+
+                equal(markers[0].iconIndex, -1);
+                equal(markers[1].iconIndex, 0);
+            });
+
+            it ('Видимый на экране маркер победил скрытый маркер, расположенный раньше него в выдаче', () => {
+                const markers = [{
+                    pixelPosition: [50, 50],
+                    groupIndex: 0,
+                    iconIndex: -1,
+                }, {
+                    pixelPosition: [50, 50],
+                    groupIndex: 0,
+                    iconIndex: 0,
+                }];
+
+                const markerArray = new Float32Array(markers.length * stride);
+                pack(markerArray, markers);
+
+                msg.markerCount = markers.length;
+                msg.markers = markerArray;
+
+                generalize(msg);
+                unpack(markers, markerArray);
+
+                equal(markers[0].iconIndex, -1);
+                equal(markers[1].iconIndex, 0);
+            });
+        });
+
+        describe('Marker labels', () => {
+            let msg: WorkerMessage;
+
+            beforeEach(() => {
+                msg = {
+                    bounds: { minX: 0, minY: 0, maxX: 100, maxY: 100 },
+                    priorityGroups: [{
+                        safeZone: 0,
+                        margin: 0,
+                        degradation: 0,
+                        iconIndex: 0,
+                    }],
+                    sprites: [{
+                        size: [10, 10],
+                        anchor: [0.5, 0.5],
+                    }],
+                    markerCount: 0,
+                    markers: new Float32Array(),
+                    labels: new Float32Array(),
+                    labelCount: 0,
+                };
+            });
+
+            it ('Подпись первого маркера убита вторым маркером', () => {
+                const markers: Marker[] = [{
+                    pixelPosition: [5, 5],
+                    groupIndex: 0,
+                    iconIndex: -1,
+                    htmlLabel: {
+                        width: 10,
+                        height: 10,
+                        offset: [5, 5],
+                        display: false,
+                    },
+                }, {
+                    pixelPosition: [15, 15],
+                    groupIndex: 0,
+                    iconIndex: -1,
+                }];
+
+                const markerArray = new Float32Array(markers.length * stride);
+                const labelArray = new Float32Array(labels.stride);
+                pack(markerArray, markers);
+                labels.pack(labelArray, markers, 1);
+
+                msg.markerCount = markers.length;
+                msg.markers = markerArray;
+                msg.labelCount = 1;
+                msg.labels = labelArray;
+
+                generalize(msg);
+                unpack(markers, markerArray);
+                labels.unpack(markers, labelArray);
+
+                equal(markers[0].iconIndex, 0);
+                equal(markers[1].iconIndex, 0);
+
+                equal((markers[0].htmlLabel as Label).display, false);
+            });
+
+            it ('Подпись первого маркера выжила', () => {
+                const markers: Marker[] = [{
+                    pixelPosition: [5, 5],
+                    groupIndex: 0,
+                    iconIndex: -1,
+                    htmlLabel: {
+                        width: 10,
+                        height: 10,
+                        offset: [10, 10],
+                        display: false,
+                    },
+                }, {
+                    pixelPosition: [35, 35],
+                    groupIndex: 0,
+                    iconIndex: -1,
+                }];
+
+                const markerArray = new Float32Array(markers.length * stride);
+                const labelArray = new Float32Array(labels.stride);
+                pack(markerArray, markers);
+                labels.pack(labelArray, markers, 1);
+
+                msg.markerCount = markers.length;
+                msg.markers = markerArray;
+                msg.labelCount = 1;
+                msg.labels = labelArray;
+
+                generalize(msg);
+                unpack(markers, markerArray);
+                labels.unpack(markers, labelArray);
+
+                equal(markers[0].iconIndex, 0);
+                equal(markers[1].iconIndex, 0);
+
+                equal((markers[0].htmlLabel as Label).display, true);
+            });
+
+            it ('Подпись второго маркера убита подписью первого маркера', () => {
+                const markers: Marker[] = [{
+                    pixelPosition: [5, 5],
+                    groupIndex: 0,
+                    iconIndex: -1,
+                    htmlLabel: {
+                        width: 10,
+                        height: 10,
+                        offset: [5, 5],
+                        display: false,
+                    },
+                }, {
+                    pixelPosition: [15, 5],
+                    groupIndex: 0,
+                    iconIndex: -1,
+                    htmlLabel: {
+                        width: 10,
+                        height: 10,
+                        offset: [-5, 5],
+                        display: false,
+                    },
+                }];
+
+                const markerArray = new Float32Array(markers.length * stride);
+                const labelArray = new Float32Array(labels.stride);
+                pack(markerArray, markers);
+                labels.pack(labelArray, markers, 1);
+
+                msg.markerCount = markers.length;
+                msg.markers = markerArray;
+                msg.labelCount = 1;
+                msg.labels = labelArray;
+
+                generalize(msg);
+                unpack(markers, markerArray);
+                labels.unpack(markers, labelArray);
+
+                equal(markers[0].iconIndex, 0);
+                equal(markers[1].iconIndex, 0);
+
+                equal((markers[0].htmlLabel as Label).display, true);
+                equal((markers[1].htmlLabel as Label).display, false);
             });
         });
 

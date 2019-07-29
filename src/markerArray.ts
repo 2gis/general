@@ -1,12 +1,13 @@
 import { Marker } from './types';
 
 // Оффсеты должны быть пронумерованы по порядку
+let i = 0;
 export const offsets = {
-    pixelPositionX: 0,
-    pixelPositionY: 1,
-    groupIndex: 2,
-    iconIndex: 3,
-    priority: 4,
+    pixelPositionX: i++,
+    pixelPositionY: i++,
+    groupIndex: i++,
+    iconIndex: i++,
+    priority: i++,
 };
 
 export const stride = Object.keys(offsets).length;
