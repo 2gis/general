@@ -1,12 +1,14 @@
 import { BBox, Vec2, WorkerMessage, PriorityGroup, Sprite } from '../types';
-import { stride, offsets } from '../markerArray';
+import * as markerArray from '../markerArray';
+import * as labelArray from '../labelArray';
 
 const collideBBox: BBox = { minX: 0, minY: 0, maxX: 0, maxY: 0 };
 const marginBBox: BBox = { minX: 0, minY: 0, maxX: 0, maxY: 0 };
 const degradationBBox: BBox = { minX: 0, minY: 0, maxX: 0, maxY: 0 };
+const noMarginBBox: BBox = { minX: 0, minY: 0, maxX: 0, maxY: 0 };
 
 export function generalize(data: WorkerMessage) {
-    const { bounds, priorityGroups, sprites, markers, markerCount } = data;
+    const { bounds, priorityGroups, markers, markerCount, labels, labelCount } = data;
 
     const planeWidth = (bounds.maxX - bounds.minX >> 3) + 1 << 3; // Ширина должна быть кратна 8
     const planeHeight = bounds.maxY - bounds.minY;
@@ -22,6 +24,9 @@ export function generalize(data: WorkerMessage) {
 
     // Это первая, с помощью нее мы просто проверяем попадание маркеров с safeZone и вставляем их с margin
     const plane = new Uint8Array(planeLength);
+
+    // Эта плоскость аналогична plane, но маркеры вставляются в неё без margin
+    const noMarginPlane = new Uint8Array(planeLength);
 
     /**
      * Следующие плоскости используются для проверки на деградацию маркеров.
@@ -40,7 +45,7 @@ export function generalize(data: WorkerMessage) {
 
     const prevIconIndices = new Int8Array(markerCount);
     for (let i = 0; i < markerCount; i++) {
-        const index = i * stride + offsets.iconIndex;
+        const index = i * markerArray.stride + markerArray.offsets.iconIndex;
 
         // Сохраняем предыдущие индексы иконок для работы гистерезиса
         prevIconIndices[i] = markers[index];
@@ -49,9 +54,57 @@ export function generalize(data: WorkerMessage) {
         markers[index] = -1;
     }
 
-    // Здесь начинает работу основной алгоритм генерализации.
-    // У нас два вложенных цикла: по группам -> по маркерам.
-    // Циклы запускаются два раза: первый прогон — для маркеров, которые были видны на экране
+    const prevLabelState = new Uint8Array(labelCount);
+    for (let i = 0; i < labelCount; i++) {
+        const index = i * labelArray.stride + labelArray.offsets.display;
+
+        // Сохраняем предыдущее состояние лейблов
+        prevLabelState[i] = labels[index];
+
+        // Сбрасываем состояние лейблов
+        labels[index] = 0;
+    }
+
+    // Здесь начинает работу основной алгоритм генерализации
+    // Генерализуем в таком порядке:
+    // 1. Приоритетные маркеры, видимые на экране, затем их подписи
+    // 2. Приоритетные маркеры, не видимые на экране, затем их подписи
+    // 3. Неприоритетные маркеры, видимые на экране, затем их подписи
+    // 4. Неприоритетные маркеры, не видимые на экране, затем их подписи
+    generalizePart(
+        data, plane, noMarginPlane, degradationPlanes, planeWidth, planeHeight,
+        prevIconIndices, prevLabelState, true, true,
+    );
+    generalizePart(
+        data, plane, noMarginPlane, degradationPlanes, planeWidth, planeHeight,
+        prevIconIndices, prevLabelState, false, true,
+    );
+    generalizePart(
+        data, plane, noMarginPlane, degradationPlanes, planeWidth, planeHeight,
+        prevIconIndices, prevLabelState, true, false,
+    );
+    generalizePart(
+        data, plane, noMarginPlane, degradationPlanes, planeWidth, planeHeight,
+        prevIconIndices, prevLabelState, false, false,
+    );
+
+}
+
+function generalizePart(
+    data: WorkerMessage,
+    plane: Uint8Array,
+    noMarginPlane: Uint8Array,
+    degradationPlanes: Uint8Array[],
+    planeWidth: number,
+    planeHeight: number,
+    prevIconIndices: Int8Array,
+    prevLabelState: Uint8Array,
+    processVisible: boolean,
+    processPriority: boolean,
+
+): void {
+    const { bounds, priorityGroups, sprites, markers, markerCount, labels, labelCount } = data;
+
     for (let i = 0; i < priorityGroups.length; i++) {
         const sprite = sprites[priorityGroups[i].iconIndex];
         if (!sprite) {
@@ -63,7 +116,13 @@ export function generalize(data: WorkerMessage) {
         const degradationPlane = i !== priorityGroups.length - 1 ? degradationPlanes[i] : undefined;
 
         for (let j = 0; j < markerCount; j++) {
-            if (prevIconIndices[j] !== -1) {
+            const isVisible = prevIconIndices[j] !== -1;
+            const isPriority = markers[markerArray.stride * j + markerArray.offsets.priority] === 1;
+
+            const visibilityOk = processVisible && isVisible || !processVisible && !isVisible;
+            const priorityOk = processPriority && isPriority || !processPriority && !isPriority;
+
+            if (visibilityOk && priorityOk) {
                 generalizeMarker(
                     markers,
                     priorityGroups,
@@ -72,6 +131,7 @@ export function generalize(data: WorkerMessage) {
                     prevDegradationPlane,
                     degradationPlane,
                     plane,
+                    noMarginPlane,
                     planeWidth,
                     planeHeight,
                     i, j,
@@ -80,32 +140,17 @@ export function generalize(data: WorkerMessage) {
         }
     }
 
-    // Второй прогон циклов — для маркеров, которые в данный момент не видны на экране.
-    for (let i = 0; i < priorityGroups.length; i++) {
-        const sprite = sprites[priorityGroups[i].iconIndex];
-        if (!sprite) {
-            // Защищаемся от ситуации, когда в конфиге передан некорректный индекс спрайта
-            continue;
-        }
+    for (let i = 0; i < labelCount; i++) {
+        const markerIndex = labels[i * labelArray.stride + labelArray.offsets.markerIndex];
 
-        const prevDegradationPlane = i !== 0 ? degradationPlanes[i - 1] : undefined;
-        const degradationPlane = i !== priorityGroups.length - 1 ? degradationPlanes[i] : undefined;
+        const isVisible = prevLabelState[i] === 1;
+        const isPriority = markers[markerIndex * markerArray.stride + markerArray.offsets.priority] === 1;
 
-        for (let j = 0; j < markerCount; j++) {
-            if (prevIconIndices[j] === -1) {
-                generalizeMarker(
-                    markers,
-                    priorityGroups,
-                    sprites,
-                    bounds,
-                    prevDegradationPlane,
-                    degradationPlane,
-                    plane,
-                    planeWidth,
-                    planeHeight,
-                    i, j,
-                );
-            }
+        const visibilityOk = processVisible && isVisible || !processVisible && !isVisible;
+        const priorityOk = processPriority && isPriority || !processPriority && !isPriority;
+
+        if (visibilityOk && priorityOk) {
+            generalizeLabel(markers, labels, bounds, plane, noMarginPlane, planeWidth, planeHeight, i);
         }
     }
 }
@@ -118,6 +163,7 @@ function generalizeMarker(
     prevDegradationPlane: Uint8Array | undefined,
     degradationPlane: Uint8Array | undefined,
     plane: Uint8Array,
+    noMarginPlane: Uint8Array,
     planeWidth: number,
     planeHeight: number,
     groupIndex: number,
@@ -125,6 +171,7 @@ function generalizeMarker(
 ): void {
     const { safeZone, iconIndex, margin, degradation } = priorityGroups[groupIndex];
     const { size, anchor } = sprites[iconIndex];
+    const { stride, offsets } = markerArray;
 
     const markerOffset = markerIndex * stride;
     const markerGroupIndex = markers[markerOffset + offsets.groupIndex];
@@ -158,11 +205,61 @@ function generalizeMarker(
         // Если все хорошо и маркер выжил, закрашиваем его в двух плоскостях
         putToArray(plane, planeWidth, marginBBox);
 
+        // Вставляем маркер в noMarginPlane для корректного лейблинга подписей
+        createBBox(noMarginBBox, planeWidth, planeHeight, size, anchor, pixelPositionX, pixelPositionY, 0);
+        putToArray(noMarginPlane, planeWidth, noMarginBBox);
+
         if (degradationPlane) {
             putToArray(degradationPlane, planeWidth, degradationBBox);
         }
 
         markers[markerOffset + offsets.iconIndex] = iconIndex;
+    }
+}
+
+function generalizeLabel(
+    markers: Float32Array,
+    labels: Float32Array,
+    bounds: BBox,
+    plane: Uint8Array,
+    noMarginPlane: Uint8Array,
+    planeWidth: number,
+    planeHeight: number,
+    labelIndex: number,
+): void {
+    const { stride, offsets } = labelArray;
+    const labelOffset = labelIndex * stride;
+
+    const markerIndex = labels[labelOffset + offsets.markerIndex];
+    const markerOffset = markerIndex * markerArray.stride;
+    const markerIsDisplayed = markers[markerOffset + markerArray.offsets.iconIndex] !== -1;
+
+    if (!markerIsDisplayed) {
+        return;
+    }
+
+    const pixelPositionX = markers[markerOffset + markerArray.offsets.pixelPositionX] - bounds.minX;
+    const pixelPositionY = markers[markerOffset + markerArray.offsets.pixelPositionY] - bounds.minY;
+
+    const size = [
+        labels[labelOffset + offsets.width],
+        labels[labelOffset + offsets.height],
+    ];
+
+    const anchor = [
+        -labels[labelOffset + offsets.offsetX] / size[0],
+        -labels[labelOffset + offsets.offsetY] / size[1],
+    ];
+
+    createBBox(noMarginBBox, planeWidth, planeHeight, size, anchor, pixelPositionX, pixelPositionY, 0);
+    if (bboxIsEmpty(noMarginBBox)) {
+        return;
+    }
+
+    if (!collide(noMarginPlane, planeWidth, noMarginBBox)) {
+        putToArray(plane, planeWidth, noMarginBBox);
+        putToArray(noMarginPlane, planeWidth, noMarginBBox);
+        labels[labelOffset + offsets.display] = 1;
     }
 }
 
