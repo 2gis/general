@@ -51,11 +51,13 @@ export class General {
         priorityGroups: PriorityGroup[],
         sprites: Sprite[],
         markers: Marker[],
+        currentZoom: number,
     ): Promise<void> {
         const message: JobMessage = {
             bounds,
             priorityGroups,
             sprites,
+            currentZoom,
         };
 
         const markerCount = markers.length;
