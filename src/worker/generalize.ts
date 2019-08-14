@@ -1,4 +1,5 @@
-import { BBox, Vec2, WorkerMessage, PriorityGroup, Sprite } from '../types';
+import { BBox, Vec2, WorkerMessage, PriorityGroup, Sprite, LabelBBox } from '../types';
+import { getIntersectionZoom } from './minZoom';
 import * as markerArray from '../markerArray';
 import * as labelArray from '../labelArray';
 
@@ -6,6 +7,8 @@ const collideBBox: BBox = { minX: 0, minY: 0, maxX: 0, maxY: 0 };
 const marginBBox: BBox = { minX: 0, minY: 0, maxX: 0, maxY: 0 };
 const degradationBBox: BBox = { minX: 0, minY: 0, maxX: 0, maxY: 0 };
 const noMarginBBox: BBox = { minX: 0, minY: 0, maxX: 0, maxY: 0 };
+
+let survivedLabelBoxes: LabelBBox[] = [];
 
 export function generalize(data: WorkerMessage) {
     const { bounds, priorityGroups, markers, markerCount, labels, labelCount } = data;
@@ -55,15 +58,21 @@ export function generalize(data: WorkerMessage) {
     }
 
     const prevLabelState = new Uint8Array(labelCount);
+    const prevLabelMinZoom = new Float32Array(labelCount);
     for (let i = 0; i < labelCount; i++) {
-        const index = i * labelArray.stride + labelArray.offsets.display;
+        const displayIndex = i * labelArray.stride + labelArray.offsets.display;
+        const minZoomIndex = i * labelArray.stride + labelArray.offsets.minZoom;
 
         // Сохраняем предыдущее состояние лейблов
-        prevLabelState[i] = labels[index];
+        prevLabelState[i] = labels[displayIndex];
+        prevLabelMinZoom[i] = labels[minZoomIndex];
 
         // Сбрасываем состояние лейблов
-        labels[index] = 0;
+        labels[displayIndex] = 0;
+        labels[minZoomIndex] = -Infinity;
     }
+
+    survivedLabelBoxes = [];
 
     // Здесь начинает работу основной алгоритм генерализации
     // Генерализуем в таком порядке:
@@ -73,21 +82,20 @@ export function generalize(data: WorkerMessage) {
     // 4. Неприоритетные маркеры, не видимые на экране, затем их подписи
     generalizePart(
         data, plane, noMarginPlane, degradationPlanes, planeWidth, planeHeight,
-        prevIconIndices, prevLabelState, true, true,
+        prevIconIndices, prevLabelState, prevLabelMinZoom, true, true,
     );
     generalizePart(
         data, plane, noMarginPlane, degradationPlanes, planeWidth, planeHeight,
-        prevIconIndices, prevLabelState, false, true,
+        prevIconIndices, prevLabelState, prevLabelMinZoom, false, true,
     );
     generalizePart(
         data, plane, noMarginPlane, degradationPlanes, planeWidth, planeHeight,
-        prevIconIndices, prevLabelState, true, false,
+        prevIconIndices, prevLabelState, prevLabelMinZoom, true, false,
     );
     generalizePart(
         data, plane, noMarginPlane, degradationPlanes, planeWidth, planeHeight,
-        prevIconIndices, prevLabelState, false, false,
+        prevIconIndices, prevLabelState, prevLabelMinZoom, false, false,
     );
-
 }
 
 function generalizePart(
@@ -99,11 +107,11 @@ function generalizePart(
     planeHeight: number,
     prevIconIndices: Int8Array,
     prevLabelState: Uint8Array,
+    prevLabelMinZoom: Float32Array,
     processVisible: boolean,
     processPriority: boolean,
-
 ): void {
-    const { bounds, priorityGroups, sprites, markers, markerCount, labels, labelCount } = data;
+    const { bounds, priorityGroups, sprites, markers, markerCount, labels, labelCount, currentZoom } = data;
 
     for (let i = 0; i < priorityGroups.length; i++) {
         const sprite = sprites[priorityGroups[i].iconIndex];
@@ -143,14 +151,14 @@ function generalizePart(
     for (let i = 0; i < labelCount; i++) {
         const markerIndex = labels[i * labelArray.stride + labelArray.offsets.markerIndex];
 
-        const isVisible = prevLabelState[i] === 1;
+        const isVisible = prevLabelState[i] === 1 && currentZoom >= prevLabelMinZoom[i];
         const isPriority = markers[markerIndex * markerArray.stride + markerArray.offsets.priority] === 1;
 
         const visibilityOk = processVisible && isVisible || !processVisible && !isVisible;
         const priorityOk = processPriority && isPriority || !processPriority && !isPriority;
 
         if (visibilityOk && priorityOk) {
-            generalizeLabel(markers, labels, bounds, plane, noMarginPlane, planeWidth, planeHeight, i);
+            generalizeLabel(markers, labels, bounds, plane, noMarginPlane, planeWidth, planeHeight, currentZoom, i);
         }
     }
 }
@@ -225,6 +233,7 @@ function generalizeLabel(
     noMarginPlane: Uint8Array,
     planeWidth: number,
     planeHeight: number,
+    currentZoom: number,
     labelIndex: number,
 ): void {
     const { stride, offsets } = labelArray;
@@ -258,8 +267,29 @@ function generalizeLabel(
 
     if (!collide(noMarginPlane, planeWidth, noMarginBBox)) {
         putToArray(plane, planeWidth, noMarginBBox);
-        putToArray(noMarginPlane, planeWidth, noMarginBBox);
         labels[labelOffset + offsets.display] = 1;
+
+        const labelBox: LabelBBox = {
+            anchorX: pixelPositionX,
+            anchorY: pixelPositionY,
+            minX: -size[0] * anchor[0],
+            minY: -size[1] * anchor[1],
+            maxX: size[0] * (1 - anchor[0]),
+            maxY: size[1] * (1 - anchor[1]),
+            minZoom: -Infinity,
+        };
+
+        for (const existingBox of survivedLabelBoxes) {
+            const minZoom = getIntersectionZoom(existingBox, labelBox, currentZoom);
+
+            if (minZoom > labelBox.minZoom && minZoom > existingBox.minZoom) {
+                labelBox.minZoom = minZoom;
+            }
+        }
+
+        labels[labelOffset + offsets.minZoom] = labelBox.minZoom;
+
+        survivedLabelBoxes.push(labelBox);
     }
 }
 

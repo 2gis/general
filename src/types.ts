@@ -25,6 +25,7 @@ export interface Label {
     width: number;
     height: number;
     display: boolean;
+    minZoom: number;
 }
 
 export interface PriorityGroup {
@@ -45,10 +46,17 @@ export interface BBox {
     maxY: number;
 }
 
+export type LabelBBox = BBox & {
+    anchorX: number;
+    anchorY: number;
+    minZoom: number;
+};
+
 export interface JobMessage {
     bounds: BBox;
     priorityGroups: PriorityGroup[];
     sprites: Sprite[];
+    currentZoom: number;
 }
 
 export interface WorkerMessage {
@@ -59,6 +67,7 @@ export interface WorkerMessage {
     markers: Float32Array;
     labelCount: number;
     labels: Float32Array;
+    currentZoom: number;
 }
 
 export interface Job {

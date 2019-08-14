@@ -216,6 +216,7 @@ describe('generalize.ts', () => {
                     markers: markerArray,
                     labels: new Float32Array(),
                     labelCount: 0,
+                    currentZoom: 0,
                 };
             });
 
@@ -310,6 +311,7 @@ describe('generalize.ts', () => {
                     markers: markerArray,
                     labels: new Float32Array(),
                     labelCount: 0,
+                    currentZoom: 0,
                 };
             });
 
@@ -361,6 +363,7 @@ describe('generalize.ts', () => {
                     markers: new Float32Array(),
                     labels: new Float32Array(),
                     labelCount: 0,
+                    currentZoom: 0,
                 };
             });
 
@@ -434,6 +437,7 @@ describe('generalize.ts', () => {
                     markers: new Float32Array(),
                     labels: new Float32Array(),
                     labelCount: 0,
+                    currentZoom: 10,
                 };
             });
 
@@ -447,6 +451,7 @@ describe('generalize.ts', () => {
                         height: 10,
                         offset: [5, 5],
                         display: false,
+                        minZoom: -Infinity,
                     },
                 }, {
                     pixelPosition: [15, 15],
@@ -484,6 +489,7 @@ describe('generalize.ts', () => {
                         height: 10,
                         offset: [10, 10],
                         display: false,
+                        minZoom: -Infinity,
                     },
                 }, {
                     pixelPosition: [35, 35],
@@ -511,7 +517,9 @@ describe('generalize.ts', () => {
                 equal((markers[0].htmlLabel as Label).display, true);
             });
 
-            it ('Подпись второго маркера убита подписью первого маркера', () => {
+            it (
+                'Подпись второго маркера перекрыта подписью первого маркера, ' +
+                'ей выставляется minZoom больше текущего', () => {
                 const markers: Marker[] = [{
                     pixelPosition: [5, 5],
                     groupIndex: 0,
@@ -521,6 +529,7 @@ describe('generalize.ts', () => {
                         height: 10,
                         offset: [5, 5],
                         display: false,
+                        minZoom: -Infinity,
                     },
                 }, {
                     pixelPosition: [15, 5],
@@ -531,28 +540,75 @@ describe('generalize.ts', () => {
                         height: 10,
                         offset: [-5, 5],
                         display: false,
+                        minZoom: -Infinity,
                     },
                 }];
 
                 const markerArray = new Float32Array(markers.length * stride);
-                const labelArray = new Float32Array(labels.stride);
+                const labelArray = new Float32Array(markers.length * labels.stride);
                 pack(markerArray, markers);
                 labels.pack(labelArray, markers, 1);
 
                 msg.markerCount = markers.length;
                 msg.markers = markerArray;
-                msg.labelCount = 1;
+                msg.labelCount = 2;
                 msg.labels = labelArray;
 
                 generalize(msg);
                 unpack(markers, markerArray);
                 labels.unpack(markers, labelArray);
 
-                equal(markers[0].iconIndex, 0);
-                equal(markers[1].iconIndex, 0);
+                equal((markers[0].htmlLabel as Label).display, true);
+                equal((markers[1].htmlLabel as Label).display, true);
+                equal((markers[0].htmlLabel as Label).minZoom, -Infinity);
+                equal((markers[1].htmlLabel as Label).minZoom, 11);
+            });
+
+            it (
+                'Подпись второго маркера не перекрыта подписью первого маркера, ' +
+                'ей выставляется minZoom меньше текущего', () => {
+                const markers: Marker[] = [{
+                    pixelPosition: [10, 50],
+                    groupIndex: 0,
+                    iconIndex: -1,
+                    htmlLabel: {
+                        width: 10,
+                        height: 10,
+                        offset: [10, -10],
+                        display: false,
+                        minZoom: -Infinity,
+                    },
+                }, {
+                    pixelPosition: [90, 50],
+                    groupIndex: 0,
+                    iconIndex: -1,
+                    htmlLabel: {
+                        width: 10,
+                        height: 10,
+                        offset: [-30, -10],
+                        display: false,
+                        minZoom: -Infinity,
+                    },
+                }];
+
+                const markerArray = new Float32Array(markers.length * stride);
+                const labelArray = new Float32Array(markers.length * labels.stride);
+                pack(markerArray, markers);
+                labels.pack(labelArray, markers, 1);
+
+                msg.markerCount = markers.length;
+                msg.markers = markerArray;
+                msg.labelCount = 2;
+                msg.labels = labelArray;
+
+                generalize(msg);
+                unpack(markers, markerArray);
+                labels.unpack(markers, labelArray);
 
                 equal((markers[0].htmlLabel as Label).display, true);
-                equal((markers[1].htmlLabel as Label).display, false);
+                equal((markers[1].htmlLabel as Label).display, true);
+                equal((markers[0].htmlLabel as Label).minZoom, -Infinity);
+                equal((markers[1].htmlLabel as Label).minZoom, 9.321928024291992);
             });
         });
 
@@ -583,6 +639,7 @@ describe('generalize.ts', () => {
                 markers: markerArray,
                 labels: new Float32Array(),
                 labelCount: 0,
+                currentZoom: 0,
             };
 
             generalize(msg);
@@ -618,6 +675,7 @@ describe('generalize.ts', () => {
                 markers: markerArray,
                 labels: new Float32Array(),
                 labelCount: 0,
+                currentZoom: 0,
             };
 
             generalize(msg);

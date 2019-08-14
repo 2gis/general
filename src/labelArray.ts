@@ -8,6 +8,7 @@ export const offsets = {
     width: i++,
     height: i++,
     display: i++,
+    minZoom: i++,
 };
 
 export const stride = i;
@@ -31,6 +32,7 @@ export function pack(labelArray: Float32Array, markers: Marker[], devicePixelRat
         labelArray[labelOffset + offsets.width] = label.width * devicePixelRatio;
         labelArray[labelOffset + offsets.height] = label.height * devicePixelRatio;
         labelArray[labelOffset + offsets.display] = label.display ? 1 : 0;
+        labelArray[labelOffset + offsets.minZoom] = label.minZoom;
 
         labelOffset += stride;
     }
@@ -50,6 +52,7 @@ export function unpack(markers: Marker[], labelArray: Float32Array) {
         }
 
         label.display = labelArray[labelOffset + offsets.display] === 1;
+        label.minZoom = labelArray[labelOffset + offsets.minZoom];
 
         labelOffset += stride;
     }
