@@ -76,29 +76,52 @@ export function generalize(data: WorkerMessage) {
 
     // Здесь начинает работу основной алгоритм генерализации
     // Генерализуем в таком порядке:
-    // 1. Приоритетные маркеры, видимые на экране, затем их подписи
-    // 2. Приоритетные маркеры, не видимые на экране, затем их подписи
-    // 3. Неприоритетные маркеры, видимые на экране, затем их подписи
-    // 4. Неприоритетные маркеры, не видимые на экране, затем их подписи
-    generalizePart(
+    // 1. Приоритетные маркеры, видимые на экране
+    // 2. Приоритетные маркеры, не видимые на экране
+    // 3. Приоритетные подписи, видимые на экране
+    // 4. Приоритетные подписи, не видимые на экране
+    // 5. Неприоритетные маркеры, видимые на экране
+    // 6. Неприоритетные маркеры, не видимые на экране
+    // 7. Неприоритетные подписи, видимые на экране
+    // 8. Неприоритетные подписи, не видимые на экране
+    generalizeMarkers(
         data, plane, noMarginPlane, degradationPlanes, planeWidth, planeHeight,
-        prevIconIndices, prevLabelState, prevLabelMinZoom, true, true,
+        prevIconIndices, true, true,
     );
-    generalizePart(
+    generalizeMarkers(
         data, plane, noMarginPlane, degradationPlanes, planeWidth, planeHeight,
-        prevIconIndices, prevLabelState, prevLabelMinZoom, false, true,
+        prevIconIndices, false, true,
     );
-    generalizePart(
-        data, plane, noMarginPlane, degradationPlanes, planeWidth, planeHeight,
-        prevIconIndices, prevLabelState, prevLabelMinZoom, true, false,
+
+    generalizeLabels(
+        data, plane, noMarginPlane, planeWidth, planeHeight, prevLabelState,
+        prevLabelMinZoom, true, true,
     );
-    generalizePart(
+    generalizeLabels(
+        data, plane, noMarginPlane, planeWidth, planeHeight, prevLabelState,
+        prevLabelMinZoom, false, true,
+    );
+
+    generalizeMarkers(
         data, plane, noMarginPlane, degradationPlanes, planeWidth, planeHeight,
-        prevIconIndices, prevLabelState, prevLabelMinZoom, false, false,
+        prevIconIndices, true, false,
+    );
+    generalizeMarkers(
+        data, plane, noMarginPlane, degradationPlanes, planeWidth, planeHeight,
+        prevIconIndices, false, false,
+    );
+
+    generalizeLabels(
+        data, plane, noMarginPlane, planeWidth, planeHeight, prevLabelState,
+        prevLabelMinZoom, true, false,
+    );
+    generalizeLabels(
+        data, plane, noMarginPlane, planeWidth, planeHeight, prevLabelState,
+        prevLabelMinZoom, false, false,
     );
 }
 
-function generalizePart(
+function generalizeMarkers(
     data: WorkerMessage,
     plane: Uint8Array,
     noMarginPlane: Uint8Array,
@@ -106,12 +129,10 @@ function generalizePart(
     planeWidth: number,
     planeHeight: number,
     prevIconIndices: Int8Array,
-    prevLabelState: Uint8Array,
-    prevLabelMinZoom: Float32Array,
     processVisible: boolean,
     processPriority: boolean,
 ): void {
-    const { bounds, priorityGroups, sprites, markers, markerCount, labels, labelCount, currentZoom } = data;
+    const { bounds, priorityGroups, sprites, markers, markerCount } = data;
 
     for (let i = 0; i < priorityGroups.length; i++) {
         const sprite = sprites[priorityGroups[i].iconIndex];
@@ -147,6 +168,20 @@ function generalizePart(
             }
         }
     }
+}
+
+function generalizeLabels(
+    data: WorkerMessage,
+    plane: Uint8Array,
+    noMarginPlane: Uint8Array,
+    planeWidth: number,
+    planeHeight: number,
+    prevLabelState: Uint8Array,
+    prevLabelMinZoom: Float32Array,
+    processVisible: boolean,
+    processPriority: boolean,
+): void {
+    const { bounds, markers, labels, labelCount, currentZoom } = data;
 
     for (let i = 0; i < labelCount; i++) {
         const markerIndex = labels[i * labelArray.stride + labelArray.offsets.markerIndex];
