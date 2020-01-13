@@ -25,11 +25,11 @@ export function generalize(data: WorkerMessage) {
      * У нас есть несколько плоскостей.
      */
 
-    // Это первая, с помощью нее мы просто проверяем попадание маркеров с safeZone и вставляем их с margin
+    // С помощью этой плоскости проверяется попадание маркеров с safeZone и вставляется они с margin
     const plane = new Uint8Array(planeLength);
 
-    // Эта плоскость аналогична plane, но маркеры вставляются в неё без margin
-    const noMarginPlane = new Uint8Array(planeLength);
+    // Эта плоскость используется для подписей
+    const labelPlane = new Uint8Array(planeLength);
 
     /**
      * Следующие плоскости используются для проверки на деградацию маркеров.
@@ -85,38 +85,38 @@ export function generalize(data: WorkerMessage) {
     // 7. Неприоритетные подписи, видимые на экране
     // 8. Неприоритетные подписи, не видимые на экране
     generalizeMarkers(
-        data, plane, noMarginPlane, degradationPlanes, planeWidth, planeHeight,
+        data, plane, degradationPlanes, planeWidth, planeHeight,
         prevIconIndices, true, true,
     );
     generalizeMarkers(
-        data, plane, noMarginPlane, degradationPlanes, planeWidth, planeHeight,
+        data, plane, degradationPlanes, planeWidth, planeHeight,
         prevIconIndices, false, true,
     );
 
     generalizeLabels(
-        data, plane, noMarginPlane, planeWidth, planeHeight, prevLabelState,
+        data, labelPlane, planeWidth, planeHeight, prevLabelState,
         prevLabelMinZoom, true, true,
     );
     generalizeLabels(
-        data, plane, noMarginPlane, planeWidth, planeHeight, prevLabelState,
+        data, labelPlane, planeWidth, planeHeight, prevLabelState,
         prevLabelMinZoom, false, true,
     );
 
     generalizeMarkers(
-        data, plane, noMarginPlane, degradationPlanes, planeWidth, planeHeight,
+        data, plane, degradationPlanes, planeWidth, planeHeight,
         prevIconIndices, true, false,
     );
     generalizeMarkers(
-        data, plane, noMarginPlane, degradationPlanes, planeWidth, planeHeight,
+        data, plane, degradationPlanes, planeWidth, planeHeight,
         prevIconIndices, false, false,
     );
 
     generalizeLabels(
-        data, plane, noMarginPlane, planeWidth, planeHeight, prevLabelState,
+        data, labelPlane, planeWidth, planeHeight, prevLabelState,
         prevLabelMinZoom, true, false,
     );
     generalizeLabels(
-        data, plane, noMarginPlane, planeWidth, planeHeight, prevLabelState,
+        data, labelPlane, planeWidth, planeHeight, prevLabelState,
         prevLabelMinZoom, false, false,
     );
 }
@@ -124,7 +124,6 @@ export function generalize(data: WorkerMessage) {
 function generalizeMarkers(
     data: WorkerMessage,
     plane: Uint8Array,
-    noMarginPlane: Uint8Array,
     degradationPlanes: Uint8Array[],
     planeWidth: number,
     planeHeight: number,
@@ -160,7 +159,6 @@ function generalizeMarkers(
                     prevDegradationPlane,
                     degradationPlane,
                     plane,
-                    noMarginPlane,
                     planeWidth,
                     planeHeight,
                     i, j,
@@ -172,8 +170,7 @@ function generalizeMarkers(
 
 function generalizeLabels(
     data: WorkerMessage,
-    plane: Uint8Array,
-    noMarginPlane: Uint8Array,
+    labelPlane: Uint8Array,
     planeWidth: number,
     planeHeight: number,
     prevLabelState: Uint8Array,
@@ -193,7 +190,7 @@ function generalizeLabels(
         const priorityOk = processPriority && isPriority || !processPriority && !isPriority;
 
         if (visibilityOk && priorityOk) {
-            generalizeLabel(markers, labels, bounds, plane, noMarginPlane, planeWidth, planeHeight, currentZoom, i);
+            generalizeLabel(markers, labels, bounds, labelPlane, planeWidth, planeHeight, currentZoom, i);
         }
     }
 }
@@ -206,7 +203,6 @@ function generalizeMarker(
     prevDegradationPlane: Uint8Array | undefined,
     degradationPlane: Uint8Array | undefined,
     plane: Uint8Array,
-    noMarginPlane: Uint8Array,
     planeWidth: number,
     planeHeight: number,
     groupIndex: number,
@@ -245,12 +241,8 @@ function generalizeMarker(
         createBBox(degradationBBox, planeWidth, planeHeight, size, anchor,
             pixelPositionX, pixelPositionY, degradation);
 
-        // Если все хорошо и маркер выжил, закрашиваем его в двух плоскостях
+        // Если все хорошо и маркер выжил, закрашиваем его в плоскости
         putToArray(plane, planeWidth, marginBBox);
-
-        // Вставляем маркер в noMarginPlane для корректного лейблинга подписей
-        createBBox(noMarginBBox, planeWidth, planeHeight, size, anchor, pixelPositionX, pixelPositionY, 0);
-        putToArray(noMarginPlane, planeWidth, noMarginBBox);
 
         if (degradationPlane) {
             putToArray(degradationPlane, planeWidth, degradationBBox);
@@ -264,8 +256,7 @@ function generalizeLabel(
     markers: Float32Array,
     labels: Float32Array,
     bounds: BBox,
-    plane: Uint8Array,
-    noMarginPlane: Uint8Array,
+    labelPlane: Uint8Array,
     planeWidth: number,
     planeHeight: number,
     currentZoom: number,
@@ -300,8 +291,8 @@ function generalizeLabel(
         return;
     }
 
-    if (!collide(noMarginPlane, planeWidth, noMarginBBox)) {
-        putToArray(plane, planeWidth, noMarginBBox);
+    if (!collide(labelPlane, planeWidth, noMarginBBox)) {
+        putToArray(labelPlane, planeWidth, noMarginBBox);
         labels[labelOffset + offsets.display] = 1;
 
         const labelBox: LabelBBox = {
