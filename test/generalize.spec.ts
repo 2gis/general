@@ -441,7 +441,7 @@ describe('generalize.ts', () => {
                 };
             });
 
-            it ('Подпись первого маркера убита вторым маркером', () => {
+            it ('Подпись первого маркера не убита вторым маркером', () => {
                 const markers: Marker[] = [{
                     pixelPosition: [5, 5],
                     groupIndex: 0,
@@ -476,7 +476,7 @@ describe('generalize.ts', () => {
                 equal(markers[0].iconIndex, 0);
                 equal(markers[1].iconIndex, 0);
 
-                equal((markers[0].htmlLabel as Label).display, false);
+                equal((markers[0].htmlLabel as Label).display, true);
             });
 
             it ('Подпись первого маркера выжила', () => {
@@ -515,53 +515,6 @@ describe('generalize.ts', () => {
                 equal(markers[1].iconIndex, 0);
 
                 equal((markers[0].htmlLabel as Label).display, true);
-            });
-
-            it (
-                'Подпись второго маркера перекрыта подписью первого маркера, ' +
-                'ей выставляется minZoom больше текущего', () => {
-                const markers: Marker[] = [{
-                    pixelPosition: [5, 5],
-                    groupIndex: 0,
-                    iconIndex: -1,
-                    htmlLabel: {
-                        width: 10,
-                        height: 10,
-                        offset: [5, 5],
-                        display: false,
-                        minZoom: -Infinity,
-                    },
-                }, {
-                    pixelPosition: [15, 5],
-                    groupIndex: 0,
-                    iconIndex: -1,
-                    htmlLabel: {
-                        width: 10,
-                        height: 10,
-                        offset: [-5, 5],
-                        display: false,
-                        minZoom: -Infinity,
-                    },
-                }];
-
-                const markerArray = new Float32Array(markers.length * stride);
-                const labelArray = new Float32Array(markers.length * labels.stride);
-                pack(markerArray, markers);
-                labels.pack(labelArray, markers, 1);
-
-                msg.markerCount = markers.length;
-                msg.markers = markerArray;
-                msg.labelCount = 2;
-                msg.labels = labelArray;
-
-                generalize(msg);
-                unpack(markers, markerArray);
-                labels.unpack(markers, labelArray);
-
-                equal((markers[0].htmlLabel as Label).display, true);
-                equal((markers[1].htmlLabel as Label).display, true);
-                equal((markers[0].htmlLabel as Label).minZoom, -Infinity);
-                equal((markers[1].htmlLabel as Label).minZoom, 11);
             });
 
             it (
