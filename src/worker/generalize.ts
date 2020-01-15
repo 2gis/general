@@ -25,7 +25,7 @@ export function generalize(data: WorkerMessage) {
      * У нас есть несколько плоскостей.
      */
 
-    // С помощью этой плоскости проверяется попадание маркеров с safeZone и вставляется они с margin
+    // С помощью этой плоскости проверяется попадание маркеров с safeZone, и вставляются они с margin
     const plane = new Uint8Array(planeLength);
 
     // Эта плоскость используется для подписей
