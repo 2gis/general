@@ -13,7 +13,7 @@
       "email": "alex@fedosov.me"
     }
   ],
-  "license": "BSD-2-Clausee",
+  "license": "BSD-2-Clause",
   "repository": {
     "type": "git",
     "url": "git://github.com/2gis/general.git"
