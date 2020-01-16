@@ -441,7 +441,7 @@ describe('generalize.ts', () => {
                 };
             });
 
-            it ('Подпись первого маркера убита вторым маркером', () => {
+            it ('Подпись первого маркера не убита вторым маркером', () => {
                 const markers: Marker[] = [{
                     pixelPosition: [5, 5],
                     groupIndex: 0,
@@ -476,7 +476,7 @@ describe('generalize.ts', () => {
                 equal(markers[0].iconIndex, 0);
                 equal(markers[1].iconIndex, 0);
 
-                equal((markers[0].htmlLabel as Label).display, false);
+                equal((markers[0].htmlLabel as Label).display, true);
             });
 
             it ('Подпись первого маркера выжила', () => {
@@ -517,9 +517,7 @@ describe('generalize.ts', () => {
                 equal((markers[0].htmlLabel as Label).display, true);
             });
 
-            it (
-                'Подпись второго маркера перекрыта подписью первого маркера, ' +
-                'ей выставляется minZoom больше текущего', () => {
+            it ('Подпись второго маркера перекрыта подписью первого маркера', () => {
                 const markers: Marker[] = [{
                     pixelPosition: [5, 5],
                     groupIndex: 0,
@@ -559,9 +557,7 @@ describe('generalize.ts', () => {
                 labels.unpack(markers, labelArray);
 
                 equal((markers[0].htmlLabel as Label).display, true);
-                equal((markers[1].htmlLabel as Label).display, true);
-                equal((markers[0].htmlLabel as Label).minZoom, -Infinity);
-                equal((markers[1].htmlLabel as Label).minZoom, 11);
+                equal((markers[1].htmlLabel as Label).display, false);
             });
 
             it (
