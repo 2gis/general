@@ -14,18 +14,6 @@ export interface Marker {
     groupIndex: number;
     /** Индекс спрайта в атласе, добавляется в ходе генерализации */
     iconIndex: number;
-    /** Опциональный флаг, указывающий приоритетность маркера */
-    priority?: boolean;
-    /** Подпись маркера */
-    htmlLabel?: Label;
-}
-
-export interface Label {
-    offset: Vec2;
-    width: number;
-    height: number;
-    display: boolean;
-    minZoom: number;
 }
 
 export interface PriorityGroup {
@@ -46,17 +34,10 @@ export interface BBox {
     maxY: number;
 }
 
-export type LabelBBox = BBox & {
-    anchorX: number;
-    anchorY: number;
-    minZoom: number;
-};
-
 export interface JobMessage {
     bounds: BBox;
     priorityGroups: PriorityGroup[];
     sprites: Sprite[];
-    currentZoom: number;
 }
 
 export interface WorkerMessage {
@@ -65,15 +46,10 @@ export interface WorkerMessage {
     sprites: Sprite[];
     markerCount: number;
     markers: Float32Array;
-    labelCount: number;
-    labels: Float32Array;
-    currentZoom: number;
 }
 
 export interface Job {
     message: JobMessage;
     markers: Marker[];
-    markerCount: number;
-    labelCount: number;
     resolve: () => void;
 }

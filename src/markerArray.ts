@@ -1,13 +1,11 @@
 import { Marker } from './types';
 
 // Оффсеты должны быть пронумерованы по порядку
-let i = 0;
 export const offsets = {
-    pixelPositionX: i++,
-    pixelPositionY: i++,
-    groupIndex: i++,
-    iconIndex: i++,
-    priority: i++,
+    pixelPositionX: 0,
+    pixelPositionY: 1,
+    groupIndex: 2,
+    iconIndex: 3,
 };
 
 export const stride = Object.keys(offsets).length;
@@ -23,7 +21,6 @@ export function pack(markerArray: Float32Array, markers: Marker[]) {
         markerArray[markerOffset + offsets.pixelPositionY] = marker.pixelPosition[1];
         markerArray[markerOffset + offsets.groupIndex] = marker.groupIndex;
         markerArray[markerOffset + offsets.iconIndex] = marker.iconIndex;
-        markerArray[markerOffset + offsets.priority] = Boolean(marker.priority) ? 1 : 0;
     }
 }
 
