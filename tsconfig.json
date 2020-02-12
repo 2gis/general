@@ -1,0 +1,18 @@
+{
+    "compilerOptions": {
+        "target": "es5",
+        "module": "es2015",
+        "moduleResolution": "node",
+        "lib": ["dom", "es6"],
+        "sourceMap": true,
+        "noImplicitAny": false,
+        "strictNullChecks": true,
+        "noEmitHelpers": false,
+        "importHelpers": false,
+        "noUnusedLocals": true,
+        "noUnusedParameters": true,
+        "declaration": true,
+        "declarationDir": "dist",
+        "skipLibCheck": true
+    }
+}

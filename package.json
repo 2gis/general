@@ -1,0 +1,53 @@
+{
+  "name": "@2gis/general",
+  "version": "3.0.0",
+  "description": "Fast marker generalization algorithm",
+  "contributors": [
+    {
+      "name": "Mstislav Zhivodkov",
+      "email": "stevemyz@gmail.com",
+      "url": "https://trufi.github.io/"
+    },
+    {
+      "name": "Alexey Fedosov",
+      "email": "alex@fedosov.me"
+    }
+  ],
+  "license": "BSD-2-Clause",
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/2gis/general.git"
+  },
+  "main": "dist/general.js",
+  "typings": "dist/src/index.d.ts",
+  "scripts": {
+    "start": "npm run dev",
+    "test": "npm run lint && npm run unit",
+    "dev": "webpack-dev-server --mode=development",
+    "build": "webpack --mode=production",
+    "builddemo": "webpack --mode=production --demo",
+    "unit": "TS_NODE_COMPILER_OPTIONS='{\"module\":\"commonjs\"}' mocha --require ts-node/register test/**/*.spec.ts",
+    "unit-dev": "TS_NODE_COMPILER_OPTIONS='{\"module\":\"commonjs\"}' mocha -w --require ts-node/register test/**/*.spec.ts",
+    "lint": "tslint 'src/**/*.ts' 'demo/**/*.ts' 'test/**/*.ts'"
+  },
+  "devDependencies": {
+    "2gis-maps": "^3.5.8",
+    "@2gis/markerdrawer": "^1.0.1",
+    "@types/leaflet": "^1.0.66",
+    "@types/mocha": "^5.2.7",
+    "@types/node": "^12.6.2",
+    "fork-ts-checker-webpack-plugin": "^1.3.7",
+    "mocha": "^6.1.4",
+    "ts-loader": "^6.0.4",
+    "ts-node": "^8.3.0",
+    "tslib": "^1.10.0",
+    "tslint": "^5.18.0",
+    "tslint-eslint-rules": "^5.4.0",
+    "typescript": "^3.5.3",
+    "webpack": "^4.35.3",
+    "webpack-cli": "^3.3.5",
+    "webpack-dev-server": "^3.7.2",
+    "webworkify-webpack": "^2.1.5",
+    "whatwg-fetch": "^3.0.0"
+  }
+}
