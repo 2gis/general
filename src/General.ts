@@ -1,5 +1,4 @@
-import * as markerArray from './markerArray';
-import * as labelArray from './labelArray';
+import { stride, pack, unpack } from './markerArray';
 import {
     BBox,
     PriorityGroup,
@@ -16,14 +15,12 @@ export class General {
     private queue: Job[];
     private currentJob: Job | undefined;
     private markerArray: Float32Array;
-    private labelArray: Float32Array;
 
     constructor() {
         this.worker = work(require.resolve('./worker'));
         this.queue = [];
         this.currentJob = undefined;
-        this.markerArray = new Float32Array(1000 * markerArray.stride);
-        this.labelArray = new Float32Array(1000 * labelArray.stride);
+        this.markerArray = new Float32Array(1000 * stride);
 
         this.worker.onmessage = (event) => {
             if (this.currentJob === undefined) {
@@ -31,14 +28,8 @@ export class General {
             }
 
             const { markers, resolve } = this.currentJob;
-            const { data } = event;
-
-            markerArray.unpack(markers, data.markerArray);
-            labelArray.unpack(markers, data.labelArray);
-
-            this.markerArray = data.markerArray;
-            this.labelArray = data.labelArray;
-
+            unpack(markers, event.data);
+            this.markerArray = event.data;
             this.currentJob = undefined;
 
             this.dequeue();
@@ -51,20 +42,15 @@ export class General {
         priorityGroups: PriorityGroup[],
         sprites: Sprite[],
         markers: Marker[],
-        currentZoom: number,
     ): Promise<void> {
         const message: JobMessage = {
             bounds,
             priorityGroups,
             sprites,
-            currentZoom,
         };
 
-        const markerCount = markers.length;
-        const labelCount = markers.filter((marker) => marker.htmlLabel !== undefined).length;
-
         return new Promise((resolve) => {
-            this.queue.push({ message, markers, resolve, markerCount, labelCount });
+            this.queue.push({ message, markers, resolve });
             this.dequeue();
         });
     }
@@ -73,17 +59,12 @@ export class General {
         this.queue = [];
     }
 
-    private pack(markers: Marker[], markerCount: number, labelCount: number): void {
-        if (markerCount * markerArray.stride > this.markerArray.length) {
-            this.markerArray = new Float32Array(markerCount * markerArray.stride);
+    private pack(markers: Marker[]) {
+        if (markers.length * stride > this.markerArray.length) {
+            this.markerArray = new Float32Array(markers.length * stride);
         }
 
-        if (labelCount * labelArray.stride > this.labelArray.length) {
-            this.labelArray = new Float32Array(labelCount * labelArray.stride);
-        }
-
-        markerArray.pack(this.markerArray, markers);
-        labelArray.pack(this.labelArray, markers, window.devicePixelRatio);
+        pack(this.markerArray, markers);
     }
 
     private dequeue() {
@@ -97,15 +78,13 @@ export class General {
             return;
         }
 
-        this.pack(job.markers, job.markerCount, job.labelCount);
+        this.pack(job.markers);
 
         const message = job.message as WorkerMessage;
         message.markers = this.markerArray;
-        message.markerCount = job.markerCount;
-        message.labels = this.labelArray;
-        message.labelCount = job.labelCount;
+        message.markerCount = job.markers.length;
 
-        this.worker.postMessage(message, [message.markers.buffer, message.labels.buffer]);
+        this.worker.postMessage(message, [message.markers.buffer]);
 
         this.currentJob = job;
     }

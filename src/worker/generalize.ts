@@ -1,17 +1,12 @@
-import { BBox, Vec2, WorkerMessage, PriorityGroup, Sprite, LabelBBox } from '../types';
-import { getIntersectionZoom } from './minZoom';
-import * as markerArray from '../markerArray';
-import * as labelArray from '../labelArray';
+import { BBox, Vec2, WorkerMessage, PriorityGroup, Sprite } from '../types';
+import { stride, offsets } from '../markerArray';
 
 const collideBBox: BBox = { minX: 0, minY: 0, maxX: 0, maxY: 0 };
 const marginBBox: BBox = { minX: 0, minY: 0, maxX: 0, maxY: 0 };
 const degradationBBox: BBox = { minX: 0, minY: 0, maxX: 0, maxY: 0 };
-const noMarginBBox: BBox = { minX: 0, minY: 0, maxX: 0, maxY: 0 };
-
-let survivedLabelBoxes: LabelBBox[] = [];
 
 export function generalize(data: WorkerMessage) {
-    const { bounds, priorityGroups, markers, markerCount, labels, labelCount } = data;
+    const { bounds, priorityGroups, sprites, markers, markerCount } = data;
 
     const planeWidth = (bounds.maxX - bounds.minX >> 3) + 1 << 3; // Ширина должна быть кратна 8
     const planeHeight = bounds.maxY - bounds.minY;
@@ -25,11 +20,8 @@ export function generalize(data: WorkerMessage) {
      * У нас есть несколько плоскостей.
      */
 
-    // С помощью этой плоскости проверяется попадание маркеров с safeZone, и вставляются они с margin
+    // Это первая, с помощью нее мы просто проверяем попадание маркеров с safeZone и вставляем их с margin
     const plane = new Uint8Array(planeLength);
-
-    // Эта плоскость используется для подписей
-    const labelPlane = new Uint8Array(planeLength);
 
     /**
      * Следующие плоскости используются для проверки на деградацию маркеров.
@@ -48,7 +40,7 @@ export function generalize(data: WorkerMessage) {
 
     const prevIconIndices = new Int8Array(markerCount);
     for (let i = 0; i < markerCount; i++) {
-        const index = i * markerArray.stride + markerArray.offsets.iconIndex;
+        const index = i * stride + offsets.iconIndex;
 
         // Сохраняем предыдущие индексы иконок для работы гистерезиса
         prevIconIndices[i] = markers[index];
@@ -57,82 +49,9 @@ export function generalize(data: WorkerMessage) {
         markers[index] = -1;
     }
 
-    const prevLabelState = new Uint8Array(labelCount);
-    const prevLabelMinZoom = new Float32Array(labelCount);
-    for (let i = 0; i < labelCount; i++) {
-        const displayIndex = i * labelArray.stride + labelArray.offsets.display;
-        const minZoomIndex = i * labelArray.stride + labelArray.offsets.minZoom;
-
-        // Сохраняем предыдущее состояние лейблов
-        prevLabelState[i] = labels[displayIndex];
-        prevLabelMinZoom[i] = labels[minZoomIndex];
-
-        // Сбрасываем состояние лейблов
-        labels[displayIndex] = 0;
-        labels[minZoomIndex] = -Infinity;
-    }
-
-    survivedLabelBoxes = [];
-
-    // Здесь начинает работу основной алгоритм генерализации
-    // Генерализуем в таком порядке:
-    // 1. Приоритетные маркеры, видимые на экране
-    // 2. Приоритетные маркеры, не видимые на экране
-    // 3. Приоритетные подписи, видимые на экране
-    // 4. Приоритетные подписи, не видимые на экране
-    // 5. Неприоритетные маркеры, видимые на экране
-    // 6. Неприоритетные маркеры, не видимые на экране
-    // 7. Неприоритетные подписи, видимые на экране
-    // 8. Неприоритетные подписи, не видимые на экране
-    generalizeMarkers(
-        data, plane, degradationPlanes, planeWidth, planeHeight,
-        prevIconIndices, true, true,
-    );
-    generalizeMarkers(
-        data, plane, degradationPlanes, planeWidth, planeHeight,
-        prevIconIndices, false, true,
-    );
-
-    generalizeLabels(
-        data, labelPlane, planeWidth, planeHeight, prevLabelState,
-        prevLabelMinZoom, true, true,
-    );
-    generalizeLabels(
-        data, labelPlane, planeWidth, planeHeight, prevLabelState,
-        prevLabelMinZoom, false, true,
-    );
-
-    generalizeMarkers(
-        data, plane, degradationPlanes, planeWidth, planeHeight,
-        prevIconIndices, true, false,
-    );
-    generalizeMarkers(
-        data, plane, degradationPlanes, planeWidth, planeHeight,
-        prevIconIndices, false, false,
-    );
-
-    generalizeLabels(
-        data, labelPlane, planeWidth, planeHeight, prevLabelState,
-        prevLabelMinZoom, true, false,
-    );
-    generalizeLabels(
-        data, labelPlane, planeWidth, planeHeight, prevLabelState,
-        prevLabelMinZoom, false, false,
-    );
-}
-
-function generalizeMarkers(
-    data: WorkerMessage,
-    plane: Uint8Array,
-    degradationPlanes: Uint8Array[],
-    planeWidth: number,
-    planeHeight: number,
-    prevIconIndices: Int8Array,
-    processVisible: boolean,
-    processPriority: boolean,
-): void {
-    const { bounds, priorityGroups, sprites, markers, markerCount } = data;
-
+    // Здесь начинает работу основной алгоритм генерализации.
+    // У нас два вложенных цикла: по группам -> по маркерам.
+    // Циклы запускаются два раза: первый прогон — для маркеров, которые были видны на экране
     for (let i = 0; i < priorityGroups.length; i++) {
         const sprite = sprites[priorityGroups[i].iconIndex];
         if (!sprite) {
@@ -144,13 +63,7 @@ function generalizeMarkers(
         const degradationPlane = i !== priorityGroups.length - 1 ? degradationPlanes[i] : undefined;
 
         for (let j = 0; j < markerCount; j++) {
-            const isVisible = prevIconIndices[j] !== -1;
-            const isPriority = markers[markerArray.stride * j + markerArray.offsets.priority] === 1;
-
-            const visibilityOk = processVisible && isVisible || !processVisible && !isVisible;
-            const priorityOk = processPriority && isPriority || !processPriority && !isPriority;
-
-            if (visibilityOk && priorityOk) {
+            if (prevIconIndices[j] !== -1) {
                 generalizeMarker(
                     markers,
                     priorityGroups,
@@ -166,31 +79,33 @@ function generalizeMarkers(
             }
         }
     }
-}
 
-function generalizeLabels(
-    data: WorkerMessage,
-    labelPlane: Uint8Array,
-    planeWidth: number,
-    planeHeight: number,
-    prevLabelState: Uint8Array,
-    prevLabelMinZoom: Float32Array,
-    processVisible: boolean,
-    processPriority: boolean,
-): void {
-    const { bounds, markers, labels, labelCount, currentZoom } = data;
+    // Второй прогон циклов — для маркеров, которые в данный момент не видны на экране.
+    for (let i = 0; i < priorityGroups.length; i++) {
+        const sprite = sprites[priorityGroups[i].iconIndex];
+        if (!sprite) {
+            // Защищаемся от ситуации, когда в конфиге передан некорректный индекс спрайта
+            continue;
+        }
 
-    for (let i = 0; i < labelCount; i++) {
-        const markerIndex = labels[i * labelArray.stride + labelArray.offsets.markerIndex];
+        const prevDegradationPlane = i !== 0 ? degradationPlanes[i - 1] : undefined;
+        const degradationPlane = i !== priorityGroups.length - 1 ? degradationPlanes[i] : undefined;
 
-        const isVisible = prevLabelState[i] === 1 && currentZoom >= prevLabelMinZoom[i];
-        const isPriority = markers[markerIndex * markerArray.stride + markerArray.offsets.priority] === 1;
-
-        const visibilityOk = processVisible && isVisible || !processVisible && !isVisible;
-        const priorityOk = processPriority && isPriority || !processPriority && !isPriority;
-
-        if (visibilityOk && priorityOk) {
-            generalizeLabel(markers, labels, bounds, labelPlane, planeWidth, planeHeight, currentZoom, i);
+        for (let j = 0; j < markerCount; j++) {
+            if (prevIconIndices[j] === -1) {
+                generalizeMarker(
+                    markers,
+                    priorityGroups,
+                    sprites,
+                    bounds,
+                    prevDegradationPlane,
+                    degradationPlane,
+                    plane,
+                    planeWidth,
+                    planeHeight,
+                    i, j,
+                );
+            }
         }
     }
 }
@@ -210,7 +125,6 @@ function generalizeMarker(
 ): void {
     const { safeZone, iconIndex, margin, degradation } = priorityGroups[groupIndex];
     const { size, anchor } = sprites[iconIndex];
-    const { stride, offsets } = markerArray;
 
     const markerOffset = markerIndex * stride;
     const markerGroupIndex = markers[markerOffset + offsets.groupIndex];
@@ -241,7 +155,7 @@ function generalizeMarker(
         createBBox(degradationBBox, planeWidth, planeHeight, size, anchor,
             pixelPositionX, pixelPositionY, degradation);
 
-        // Если все хорошо и маркер выжил, закрашиваем его в плоскости
+        // Если все хорошо и маркер выжил, закрашиваем его в двух плоскостях
         putToArray(plane, planeWidth, marginBBox);
 
         if (degradationPlane) {
@@ -249,73 +163,6 @@ function generalizeMarker(
         }
 
         markers[markerOffset + offsets.iconIndex] = iconIndex;
-    }
-}
-
-function generalizeLabel(
-    markers: Float32Array,
-    labels: Float32Array,
-    bounds: BBox,
-    labelPlane: Uint8Array,
-    planeWidth: number,
-    planeHeight: number,
-    currentZoom: number,
-    labelIndex: number,
-): void {
-    const { stride, offsets } = labelArray;
-    const labelOffset = labelIndex * stride;
-
-    const markerIndex = labels[labelOffset + offsets.markerIndex];
-    const markerOffset = markerIndex * markerArray.stride;
-    const markerIsDisplayed = markers[markerOffset + markerArray.offsets.iconIndex] !== -1;
-
-    if (!markerIsDisplayed) {
-        return;
-    }
-
-    const pixelPositionX = markers[markerOffset + markerArray.offsets.pixelPositionX] - bounds.minX;
-    const pixelPositionY = markers[markerOffset + markerArray.offsets.pixelPositionY] - bounds.minY;
-
-    const size = [
-        labels[labelOffset + offsets.width],
-        labels[labelOffset + offsets.height],
-    ];
-
-    const anchor = [
-        -labels[labelOffset + offsets.offsetX] / size[0],
-        -labels[labelOffset + offsets.offsetY] / size[1],
-    ];
-
-    createBBox(noMarginBBox, planeWidth, planeHeight, size, anchor, pixelPositionX, pixelPositionY, 0);
-    if (bboxIsEmpty(noMarginBBox)) {
-        return;
-    }
-
-    if (!collide(labelPlane, planeWidth, noMarginBBox)) {
-        putToArray(labelPlane, planeWidth, noMarginBBox);
-        labels[labelOffset + offsets.display] = 1;
-
-        const labelBox: LabelBBox = {
-            anchorX: pixelPositionX,
-            anchorY: pixelPositionY,
-            minX: -size[0] * anchor[0],
-            minY: -size[1] * anchor[1],
-            maxX: size[0] * (1 - anchor[0]),
-            maxY: size[1] * (1 - anchor[1]),
-            minZoom: -Infinity,
-        };
-
-        for (const existingBox of survivedLabelBoxes) {
-            const minZoom = getIntersectionZoom(existingBox, labelBox, currentZoom);
-
-            if (minZoom > labelBox.minZoom && minZoom > existingBox.minZoom) {
-                labelBox.minZoom = minZoom;
-            }
-        }
-
-        labels[labelOffset + offsets.minZoom] = labelBox.minZoom;
-
-        survivedLabelBoxes.push(labelBox);
     }
 }
 

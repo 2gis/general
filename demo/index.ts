@@ -64,13 +64,6 @@ Promise.all([loadAtlas(), loadMarkersData()])
         iconIndex: -1,
         data: markerData,
         pixelPosition: [pixelPosition[0] * retinaFactor, pixelPosition[1] * retinaFactor],
-        htmlLabel: {
-          offset: [20, -10],
-          width: 180,
-          height: 80,
-          display: false,
-          minZoom: -Infinity,
-        },
       };
       markers.push(marker);
     }
@@ -151,7 +144,7 @@ Promise.all([loadAtlas(), loadMarkersData()])
       }));
 
       console.time('gen');
-      general.generalize(bounds, priorityGroups, atlas.sprites, markers, zoom).then(() => {
+      general.generalize(bounds, priorityGroups, atlas.sprites, markers).then(() => {
         console.timeEnd('gen');
         generalizationIsBusy = false;
 
